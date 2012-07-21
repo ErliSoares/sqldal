@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Products>
+  <ObjectGroup>
+    <Key>
+      <TableName />
+      <Text>This is the key</Text>
+      <Discontinued>False</Discontinued>
+    </Key>
+    <ArrayOfObject><DALRuntimeTypeBase>
+  <Runtime_assembly_54034540_module_type>
+    <ID>1</ID>
+    <Description>Widget</Description>
+    <Discontinued>False</Discontinued>
+    <LastSale>1/1/2007 12:00:00 PM</LastSale>
+    <Runtime_assembly_4581438_module_type>
+      <Name>Brian</Name>
+      <Age>27</Age>
+    </Runtime_assembly_4581438_module_type>
+  </Runtime_assembly_54034540_module_type>
+</DALRuntimeTypeBase><DALRuntimeTypeBase>
+  <Runtime_assembly_54034540_module_type>
+    <ID>999</ID>
+    <Description>Test</Description>
+    <Discontinued>False</Discontinued>
+    <LastSale>9/10/2007 9:06:25 AM</LastSale>
+    <Runtime_assembly_4581438_module_type>
+      <Name>Kyle</Name>
+      <Age>25</Age>
+    </Runtime_assembly_4581438_module_type>
+  </Runtime_assembly_54034540_module_type>
+</DALRuntimeTypeBase></ArrayOfObject>
+  </ObjectGroup>
+  <ObjectGroup>
+    <Key>
+      <TableName />
+      <Text>This is the key</Text>
+      <Discontinued>True</Discontinued>
+    </Key>
+    <ArrayOfObject><DALRuntimeTypeBase>
+  <Runtime_assembly_13204702_module_type>
+    <ID>0</ID>
+    <Description>Brian Test Product</Description>
+    <Discontinued>True</Discontinued>
+    <LastSale>6/16/2011 11:30:45 AM</LastSale>
+    <Tests>
+      <Runtime_assembly_38589306_module_type>
+        <Runtime_assembly_4581438_module_type>
+          <Name>Nathan</Name>
+          <Age>18</Age>
+        </Runtime_assembly_4581438_module_type>
+      </Runtime_assembly_38589306_module_type>
+      <Runtime_assembly_38589306_module_type>
+        <Runtime_assembly_4581438_module_type>
+          <Name>Julie LOLOLOLOL</Name>
+          <Age>17</Age>
+        </Runtime_assembly_4581438_module_type>
+      </Runtime_assembly_38589306_module_type>
+    </Tests>
+  </Runtime_assembly_13204702_module_type>
+</DALRuntimeTypeBase></ArrayOfObject>
+  </ObjectGroup>
+</Products>

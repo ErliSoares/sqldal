@@ -1,0 +1,67 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "System.Data.DBAccess.Generic", "SqlDAL\System.Data.DBAccess.Generic.csproj", "{A0408106-B381-4E5F-9501-AEF69A18684F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTests", "UnitTests\UnitTests.csproj", "{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{27EAA3F6-BFFF-4DDC-A686-3A8897F0B672}"
+	ProjectSection(SolutionItems) = preProject
+		Local.testsettings = Local.testsettings
+		SqlDAL.vsmdi = SqlDAL.vsmdi
+		TraceAndTestImpact.testsettings = TraceAndTestImpact.testsettings
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TableClassGenerator", "TableClassGenerator\TableClassGenerator.csproj", "{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}"
+EndProject
+Global
+	GlobalSection(TestCaseManagementSettings) = postSolution
+		CategoryFile = SqlDAL.vsmdi
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Debug|Mixed Platforms = Debug|Mixed Platforms
+		Debug|x86 = Debug|x86
+		Release|Any CPU = Release|Any CPU
+		Release|Mixed Platforms = Release|Mixed Platforms
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{A0408106-B381-4E5F-9501-AEF69A18684F}.Release|x86.ActiveCfg = Release|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Debug|Mixed Platforms.ActiveCfg = Debug|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Debug|Mixed Platforms.Build.0 = Debug|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{1DD05024-74CB-4D1B-9298-3A7F3C58B20A}.Release|x86.ActiveCfg = Release|Any CPU
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Debug|Any CPU.ActiveCfg = Debug|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Debug|Mixed Platforms.ActiveCfg = Debug|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Debug|Mixed Platforms.Build.0 = Debug|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Debug|x86.ActiveCfg = Debug|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Debug|x86.Build.0 = Debug|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Release|Any CPU.ActiveCfg = Release|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Release|Mixed Platforms.ActiveCfg = Release|Any CPU
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Release|Mixed Platforms.Build.0 = Release|Any CPU
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Release|x86.ActiveCfg = Release|x86
+		{F9E97E6D-EDF7-4239-8C99-CF0556360D5C}.Release|x86.Build.0 = Release|x86
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		VisualSVNWorkingCopyRoot = .
+	EndGlobalSection
+EndGlobal

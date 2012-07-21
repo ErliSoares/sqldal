@@ -1,0 +1,79 @@
+﻿ <!--
+Copyright 2012 Brian Adams
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<Window x:Class="TableClassGenerator.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Table Class Generator" Height="Auto" Width="Auto" SizeToContent="WidthAndHeight" WindowStartupLocation="CenterScreen">
+    <Grid Margin="10">
+        <StackPanel>
+            <StackPanel Orientation="Horizontal" VerticalAlignment="Top">
+                <StackPanel>
+                    <Label Content="Server:" Padding="3,3,0,0" Height="{Binding ElementName=txtServer, Path=ActualHeight}" />
+                    <Label Content="" Padding="3,3,0,0" Height="{Binding ElementName=txtServer, Path=ActualHeight}" />
+                    <Label Content="Username: " Padding="3,3,0,0" Height="{Binding ElementName=txtServer, Path=ActualHeight}" />
+                    <Label Content="Password:" Padding="3,3,0,0" Height="{Binding ElementName=txtServer, Path=ActualHeight}" />
+                </StackPanel>
+                <StackPanel>
+                    <TextBox Name="txtServer" Width="300" Text="" />
+                    <CheckBox Name="chkIntegratedSecurity" Margin="0,3,0,0" Content="Integrated Security" Height="{Binding ElementName=txtServer, Path=ActualHeight}" />
+                    <TextBox Name="txtUserName" Width="150" HorizontalAlignment="Left" Text="">
+                        <TextBox.Style>
+                            <Style TargetType="TextBox">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=chkIntegratedSecurity, Path=IsChecked}" Value="True">
+                                        <Setter Property="TextBox.IsEnabled" Value="False" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ElementName=chkIntegratedSecurity, Path=IsChecked}" Value="False">
+                                        <Setter Property="TextBox.IsEnabled" Value="True" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBox.Style>
+                    </TextBox>
+                    <PasswordBox Name="txtPassword" Width="150" HorizontalAlignment="Left" Password="">
+                        <PasswordBox.Style>
+                            <Style TargetType="PasswordBox">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding ElementName=chkIntegratedSecurity, Path=IsChecked}" Value="True">
+                                        <Setter Property="PasswordBox.IsEnabled" Value="False" />
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding ElementName=chkIntegratedSecurity, Path=IsChecked}" Value="False">
+                                        <Setter Property="PasswordBox.IsEnabled" Value="True" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </PasswordBox.Style>
+                    </PasswordBox>
+                </StackPanel>
+                <Button Name="btnConnect" Content="Connect" VerticalAlignment="Bottom" Click="btnConnect_Click" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                <StackPanel>
+                    <Label Content="Database: " Padding="3,3,0,0" Height="{Binding ElementName=comboDatabases, Path=ActualHeight}" />
+                    <Label Content="Table: " Padding="3,3,0,0" Height="{Binding ElementName=comboDatabases, Path=ActualHeight}" />
+                </StackPanel>
+                <StackPanel>
+                    <ComboBox Name="comboDatabases" MinWidth="100" DisplayMemberPath="Name" IsEnabled="False" />
+                    <ComboBox Name="comboTables" MinWidth="100" DisplayMemberPath="Name" ItemsSource="{Binding ElementName=comboDatabases, Path=SelectedItem.Tables}" IsEnabled="False" />
+                </StackPanel>
+            </StackPanel>
+            <CheckBox Name="chkIQuickPopulate" Content="IQuickPopulate" />
+            <CheckBox Name="chkIQuickRead" Content="IQuickRead" />
+            <Button Name="btnGenerate" Margin="0,3,0,0" Content="Generate Class Text" HorizontalAlignment="Left" Click="btnGenerate_Click" />
+        </StackPanel>
+    </Grid>
+</Window>
