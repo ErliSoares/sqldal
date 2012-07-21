@@ -87,6 +87,13 @@
     <Content Include="DB_Setup\stp_QueryReadType1WithOutput.sql" />
     <Content Include="DB_Setup\stp_QueryReadType1WithTableType.sql" />
     <Content Include="DB_Setup\Tables.sql" />
+    <Content Include="DB_Setup\NORTHWND.MDF">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="DB_Setup\NORTHWND_log.ldf">
+      <DependentUpon>NORTHWND.MDF</DependentUpon>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
     <Content Include="XML\ExecuteRelatedSetReadXMLKnownTypesTableNames.xml">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
