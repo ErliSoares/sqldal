@@ -272,7 +272,7 @@ namespace System.Data.DBAccess.Generic
             int numItems = dataRows.Count;
             List<T> retList = new List<T>(numItems);
 
-            var propertyNames = new List<String>();
+            /*var propertyNames = new List<String>();
             var stringFormats = new List<String>();
             var propertyTypes = new List<Type>();
 
@@ -286,7 +286,7 @@ namespace System.Data.DBAccess.Generic
                 }
             }
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(propertyNames, stringFormats, propertyTypes, modelType);
+            var del = FastDynamicAccess.GetModelPopulateMethod(propertyNames, stringFormats, propertyTypes, modelType);*/
 
             if (db.IsMultiThreaded)
             {
@@ -300,8 +300,8 @@ namespace System.Data.DBAccess.Generic
                     return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
                     {
                         T t = new T();
-                        del(t, dr);
-                        //db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+                        //del(t, dr);
+                        db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                         return t;
                     }).ToList();
@@ -325,8 +325,8 @@ namespace System.Data.DBAccess.Generic
                     return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
                     {
                         T t = new T();
-                        del(t, dr);
-                        //db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+                        //del(t, dr);
+                        db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         return t;
                     }).ToList();
                 }
@@ -343,8 +343,8 @@ namespace System.Data.DBAccess.Generic
                     for (int i = 0; i < numItems; i++)
                     {
                         T t = new T();
-                        del(t, dataRows[i]);
-                        //db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+                        //del(t, dataRows[i]);
+                        db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                         retList.Add(t);
                     }
@@ -372,8 +372,8 @@ namespace System.Data.DBAccess.Generic
                     for (int i = 0; i < numItems; i++)
                     {
                         T t = new T();
-                        del(t, dataRows[i]);
-                        //db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+                        //del(t, dataRows[i]);
+                        db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         retList.Add(t);
                     }
 
