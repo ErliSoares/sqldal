@@ -8,9 +8,9 @@ using System.Windows;
 [assembly: AssemblyTitle("TableClassGenerator")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Brian Adams")]
+[assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("TableClassGenerator")]
-[assembly: AssemblyCopyright("Copyright ©  2012")]
+[assembly: AssemblyCopyright("Copyright © 2012 Brian Adams")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

@@ -81,7 +81,7 @@ namespace System.Data.DBAccess.Generic.Providers.ODBC
         /// <return>The connection string.</return>
         public static String GetExcelOfficeDatabaseEngineConnectionString(String file, Boolean useHeaderRow = true, Boolean intermixedAsText = true)
         {
-            return String.Format("Driver={{Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)}};DBQ={0};Extended Properties=\"HDR={1};IMEX={1}\"", file, useHeaderRow ? "Yes" : "No", intermixedAsText ? "1" : "0");
+            return String.Format("Driver={{Microsoft Excel Driver (*.xls, *.xlsx, *.xlsm, *.xlsb)}};DBQ={0};Extended Properties=\"HDR={1};IMEX={2}\"", file, useHeaderRow ? "Yes" : "No", intermixedAsText ? "1" : "0");
         }
 
         /// <summary>

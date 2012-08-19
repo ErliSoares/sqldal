@@ -727,25 +727,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="fdaIndexes">List of property indexes to use for setting via the FDA object.</param>
         internal static void Populate(this IDBAccess db, Object model, Object[] dr, ModelData data, Type modelType, List<String> mappedCols, List<String> colUpperNames, int colCount, List<Boolean> hasSetters, List<Type> propertyTypes, List<String> propertyFormats, Dictionary<Type, PopulateData> allNestedPData, List<int> fdaIndexes)
         {
-            for (int i = 0; i < colCount; i++)
-            {
-                String mapping = mappedCols[i];
-                //if the mapping is null then this object type does not have this column
-                if (mapping != null)
-                    db.SetValue(model, modelType, mapping, dr[i], data, hasSetters[i], propertyTypes[i], propertyFormats[i], fdaIndexes[i]);
-            }
-
-            var colNames = new List<String>();
-            var stringFormats = new List<String>();
-            var pTypes = new List<Type>();
-
-            for (int i = 0; i < colCount; i++)
-            {
-                String mapping = mappedCols[i];
-                //if the mapping is null then this object type does not have this column
-                if (mapping != null)
-                    db.SetValue(model, modelType, mapping, dr[i], data, hasSetters[i], propertyTypes[i], propertyFormats[i], fdaIndexes[i]);
-            }
+            FastDynamicAccess.GetModelPopulateMethod(mappedCols, propertyFormats, propertyTypes, model.GetType())(model, dr);
 
             foreach (var nest in data.NestedModelBaseFields)
             {
@@ -755,7 +737,6 @@ namespace System.Data.DBAccess.Generic
                 //if the nested model object already exists
                 //(if the parent object creates this nested object in the constructor)
                 //don't create a new one...
-                
                 var thisType = nest.Value.FieldType;
 
                 //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value

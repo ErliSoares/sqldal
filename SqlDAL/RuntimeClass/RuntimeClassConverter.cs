@@ -15,10 +15,12 @@ limitations under the License.
 */
 
 using System.Collections.Generic;
+using System.Data.DBAccess.Generic.Providers.SQL;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
+using System.Data.DBAccess.Generic.Exceptions;
 
 namespace System.Data.DBAccess.Generic
 {

@@ -14,14 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
+using System.Data.DBAccess.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System;
 using System.Collections.Generic;
-using System.Data.DBAccess.Generic;
-using System.Data.DBAccess.Generic.Providers.SQL;
-using System.IO;
 using System.Linq;
+using System.IO;
+using System.Diagnostics;
+using System.Data.DBAccess.Generic.Providers.SQL;
 using System.Text.RegularExpressions;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace UnitTests
 {

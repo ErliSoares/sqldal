@@ -21,6 +21,7 @@ using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Threading;
+using System.Data.DBAccess.Generic.Exceptions;
 
 namespace System.Data.DBAccess.Generic
 {
@@ -283,26 +284,55 @@ namespace System.Data.DBAccess.Generic
             }
         }
 
-        private static Dictionary<String, DynamicMethod> s_ModelPopulateCache = new Dictionary<String, DynamicMethod>();
+        private static Dictionary<String, GetModelPopulateMethodDelegate> s_ModelPopulateCache = new Dictionary<String, GetModelPopulateMethodDelegate>();
         internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType)
         {
-            var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames) + modelType.FullName).GenerateHash().Replace("-", ""));
-            DynamicMethod meth;
-            var sfMeth = typeof(String).GetMethod("Format", new Type[] { typeof(String), typeof(Object) });
+            var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.FullName).GenerateHash().Replace("-", ""));
+            GetModelPopulateMethodDelegate gmpmd;
 
-            if (!s_ModelPopulateCache.TryGetValue(methodName, out meth))
+            if (!s_ModelPopulateCache.TryGetValue(methodName, out gmpmd))
             {
-                meth = new DynamicMethod(methodName, typeof(void), new Type[] { modelType, typeof(Object), typeof(Object[]) }, true);
+                var sfMeth = typeof(String).GetMethod("Format", new Type[] { typeof(String), typeof(Object) });
+                var meth = new DynamicMethod(methodName, typeof(void), new Type[] { modelType, typeof(Object), typeof(Object[]) }, true);
                 var il = meth.GetILGenerator();
+
+                //il.BeginExceptionBlock();
+                il.DeclareLocal(modelType); // stores model reference
+                il.DeclareLocal(typeof(Object)); // stores object from dr[]
+
+                il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
+                il.Emit(OpCodes.Castclass, modelType); //cast it to the model type since it's an object
+                il.Emit(OpCodes.Stloc_0); //store it into the local variable
+
+                /*
+                 * for (int i = 0; i < dr.Length; i++)
+                 * {
+                 *      if (model.Property[i].IsValueType)
+                 *      {
+                 *          model.Property[i] = (T)dr[i];
+                 *      }
+                 *      else
+                 *      {
+                 *          if (dr[i] == DBNull.Value)
+                 *              model.Property[i] = null;
+                 *          else
+                 *              model.Property[i] = (T)dr[i];
+                 *      }
+                 * }
+                 */
 
                 for (int i = 0; i < propertyNames.Count; i++)
                 {
+                    //no mapping from datarow to model, ignore it
+                    if (propertyNames[i] == null)
+                        continue;
+
                     var setMethod = modelType.GetMethod("set_" + propertyNames[i]);
                     if (setMethod == null)
                         continue;
 
-                    il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
-                    il.Emit(OpCodes.Castclass, modelType); //cast it to the model type since it's an object
+                    il.BeginExceptionBlock();
+                    il.Emit(OpCodes.Ldloc_0);
                     if (stringFormats[i] != null)
                     {
                         il.Emit(OpCodes.Ldstr, stringFormats[i]); //load string format string onto stack if needed
@@ -317,28 +347,98 @@ namespace System.Data.DBAccess.Generic
 
                     il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
 
+                    var pType = propertyTypes[i];
+                    if (!pType.IsValueType || pType.IsNullableValueType())
+                    {
+                        //if it's a ref type we'll want to store it for later use
+                        il.Emit(OpCodes.Stloc_1); //store it for later use
+                        il.Emit(OpCodes.Ldloc_1);
+                    }
+
                     if (stringFormats[i] != null)
                     {
                         il.Emit(OpCodes.Call, sfMeth); //call the string format method if needed
+                        il.Emit(OpCodes.Stloc_1); //have to reset loc 1 to be what was the result of the String.Format
+                        il.Emit(OpCodes.Ldloc_1);
                     }
 
-                    var pType = propertyTypes[i];
-                    if (pType.IsValueType)
+                    if (!pType.IsValueType || pType.IsNullableValueType()) // ref type
                     {
-                        il.Emit(OpCodes.Unbox_Any, pType); //unbox if a value type
+                        /*if (value == DBNull.Value)
+                         *      value = null;
+                         * 
+                         * return (T)value;
+                         */
+                        var setPropertyLabel = il.DefineLabel();
+                        var loadNullLabel = il.DefineLabel();
+
+                        il.Emit(OpCodes.Ldsfld, typeof(DBNull).GetField("Value"));
+                        il.Emit(OpCodes.Beq, loadNullLabel); //if (value == DBNull.Value) jump to load null
+
+                        il.Emit(OpCodes.Ldloc_1); //otherwise get the value back on the top of the stack
+                        il.Emit(OpCodes.Br, setPropertyLabel);
+
+                        //load null onto stack and jump to set the method
+                        il.MarkLabel(loadNullLabel);
+                        il.Emit(OpCodes.Ldnull); // load a null
+
+                        il.MarkLabel(setPropertyLabel);
+                        if (pType.IsValueType)
+                        {
+                            il.Emit(OpCodes.Unbox, pType);
+                            il.Emit(OpCodes.Ldobj, pType);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Castclass, pType);
+                        }
                     }
-                    else
+                    else // value type
                     {
-                        il.Emit(OpCodes.Castclass, pType); //otherwise cast it to the property type
+                        //simply cast to the value type
+                        il.Emit(OpCodes.Castclass, pType);
+                        il.Emit(OpCodes.Unbox_Any, pType); //unbox if a value type
                     }
 
                     il.Emit(OpCodes.Callvirt, setMethod); //set the property
+
+                    il.BeginCatchBlock(typeof(InvalidCastException));
+                    il.Emit(OpCodes.Pop); //exception is first on the stack
+                    //load exception message.. only variable we don't know at method creation time is the type of the value that failed
+                    il.Emit(OpCodes.Ldstr, String.Format("Object passed with type '{{0}}' cannot be assigned to the type '{0}' (model '{1}' property '{2}')", propertyTypes[i], modelType, propertyNames[i]));
+
+                    //load the value that we are trying to set... if it was a value type we never stored it in loc1 to increase speed for value types.
+                    if (!pType.IsValueType)
+                    {
+                        il.Emit(OpCodes.Ldloc_1); // the object from dr[]
+                    }
+                    else
+                    {
+                        il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+
+                        //load the array index we want to read from the Object[] dr
+                        if (i <= 8)
+                            il.Emit(GetLDC_I4_Code(i));
+                        else
+                            il.Emit(OpCodes.Ldc_I4_S, i);
+
+                        il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+                    }
+
+                    il.Emit(OpCodes.Callvirt, typeof(Object).GetMethod("GetType"));
+                    il.Emit(OpCodes.Call, sfMeth);
+                    il.Emit(OpCodes.Newobj, typeof(ModelPropertyColumnMismatchException).GetConstructor(new Type[] { typeof(String) }));
+                    il.Emit(OpCodes.Throw);
+                    il.EndExceptionBlock();
                 }
 
                 il.Emit(OpCodes.Ret);
+
+                gmpmd = (GetModelPopulateMethodDelegate)meth.CreateDelegate(typeof(GetModelPopulateMethodDelegate));
+                s_ModelPopulateCache.Add(methodName, gmpmd);
             }
 
-            return (GetModelPopulateMethodDelegate)meth.CreateDelegate(typeof(GetModelPopulateMethodDelegate));
+            return gmpmd;
         }
 
         internal delegate void GetModelPopulateMethodDelegate(Object model, Object[] dr);
