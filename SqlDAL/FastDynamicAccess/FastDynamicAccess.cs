@@ -287,7 +287,7 @@ namespace System.Data.DBAccess.Generic
         private static Dictionary<String, GetModelPopulateMethodDelegate> s_ModelPopulateCache = new Dictionary<String, GetModelPopulateMethodDelegate>();
         internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType)
         {
-            var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.FullName).GenerateHash().Replace("-", ""));
+            var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.Assembly.FullName + modelType.FullName).GenerateHash().Replace("-", ""));
             GetModelPopulateMethodDelegate gmpmd;
 
             if (!s_ModelPopulateCache.TryGetValue(methodName, out gmpmd))
