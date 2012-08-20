@@ -358,11 +358,9 @@ namespace System.Data.DBAccess.Generic
                     if (stringFormats[i] != null)
                     {
                         il.Emit(OpCodes.Call, sfMeth); //call the string format method if needed
-                        il.Emit(OpCodes.Stloc_1); //have to reset loc 1 to be what was the result of the String.Format
-                        il.Emit(OpCodes.Ldloc_1);
+                        //if string format then we can skip right to the bottom
                     }
-
-                    if (!pType.IsValueType || pType.IsNullableValueType()) // ref type
+                    else if (!pType.IsValueType || pType.IsNullableValueType()) // ref type
                     {
                         /*if (value == DBNull.Value)
                          *      value = null;
