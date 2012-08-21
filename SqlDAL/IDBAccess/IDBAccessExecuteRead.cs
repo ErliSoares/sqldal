@@ -272,9 +272,9 @@ namespace System.Data.DBAccess.Generic
             int numItems = dataRows.Count;
             List<T> retList = new List<T>(numItems);
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData);
+            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData, true);
 
-            if (db.IsMultiThreaded)
+            /*if (db.IsMultiThreaded)
             {
                 db.WriteTrace(TraceLevel.DEBUG, "Multithreaded using {0} threads", db.Threads);
                 if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
@@ -315,7 +315,7 @@ namespace System.Data.DBAccess.Generic
                     }).ToList();
                 }
             }
-            else
+            else*/
             {
                 db.WriteTrace(TraceLevel.DEBUG, "Single threaded.");
                 if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
@@ -324,12 +324,14 @@ namespace System.Data.DBAccess.Generic
                     var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
                     var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
 
+                    del(retList, dataRows, numItems);
+
                     for (int i = 0; i < numItems; i++)
                     {
-                        T t = new T();
-                        del(t, dataRows[i]);
-                        db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
-                        retList.Add(t);
+                        //T t = new T();
+                        //del(t, dataRows[i], numItems);
+                        db.PopulateDefaultModelValues(retList[i], dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
+                        //retList.Add(t);
                     }
 
                     return retList;
@@ -352,12 +354,13 @@ namespace System.Data.DBAccess.Generic
                 }
                 else
                 {
-                    for (int i = 0; i < numItems; i++)
+                    del(retList, dataRows, numItems);
+                    /*for (int i = 0; i < numItems; i++)
                     {
                         T t = new T();
-                        del(t, dataRows[i]);
+                        
                         retList.Add(t);
-                    }
+                    }*/
 
                     return retList;
                 }
@@ -408,9 +411,9 @@ namespace System.Data.DBAccess.Generic
             db.WriteTrace(TraceLevel.DEBUG, "Getting all nested populate data objects.");
             var allNestedPData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetPopulateData(drf, tuple.ColumnNames, t));
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData);
+            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData, false);
 
-            if (db.IsMultiThreaded)
+            /*Iif (db.IsMultiThreaded)
             {
                 db.WriteTrace(TraceLevel.DEBUG, "Multithreaded using {0} threads", db.Threads);
                 if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
@@ -451,7 +454,7 @@ namespace System.Data.DBAccess.Generic
                     }).ToList();
                 }
             }
-            else
+            else*/
             {
                 db.WriteTrace(TraceLevel.DEBUG, "Single threaded.");
                 int numItems = dataRows.Count;
@@ -463,12 +466,14 @@ namespace System.Data.DBAccess.Generic
                     var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
                     var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
 
+                    del(retList, dataRows, numItems);
+
                     for (int i = 0; i < numItems; i++)
                     {
-                        Object t = Activator.CreateInstance(modelType);
-                        del(t, dataRows[i]);
-                        db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
-                        retList.Add(t);
+                        //Object t = Activator.CreateInstance(modelType);
+                        
+                        db.PopulateDefaultModelValues(retList[i], dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
+                        //retList.Add(t);
                     }
 
                     return retList;
@@ -491,12 +496,14 @@ namespace System.Data.DBAccess.Generic
                 }
                 else
                 {
-                    for (int i = 0; i < numItems; i++)
+                    del(retList, dataRows, numItems);
+
+                    /*for (int i = 0; i < numItems; i++)
                     {
                         Object t = Activator.CreateInstance(modelType);
                         del(t, dataRows[i]);
                         retList.Add(t);
-                    }
+                    }*/
 
                     return retList;
                 }

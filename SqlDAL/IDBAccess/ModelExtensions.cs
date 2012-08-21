@@ -727,9 +727,9 @@ namespace System.Data.DBAccess.Generic
         /// <param name="fdaIndexes">List of property indexes to use for setting via the FDA object.</param>
         internal static void Populate(this IDBAccess db, Object model, Object[] dr, ModelData data, Type modelType, List<String> mappedCols, List<String> colUpperNames, int colCount, List<Boolean> hasSetters, List<Type> propertyTypes, List<String> propertyFormats, Dictionary<Type, PopulateData> allNestedPData, List<int> fdaIndexes)
         {
-            FastDynamicAccess.GetModelPopulateMethod(mappedCols, propertyFormats, propertyTypes, model.GetType(), data, allNestedPData, db.ModelsData)(model, dr);
+            FastDynamicAccess.GetModelPopulateMethod(mappedCols, propertyFormats, propertyTypes, model.GetType(), data, allNestedPData, db.ModelsData, false)(new List<Object> { model }, new List<Object[]> { dr }, 1);
 
-            foreach (var nest in data.NestedModelBaseFields)
+            /*foreach (var nest in data.NestedModelBaseFields)
             {
                 //TO DO: this runs about 7% slower checking each time here
                 //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
@@ -746,7 +746,7 @@ namespace System.Data.DBAccess.Generic
                 var pData = allNestedPData[thisType];
                 db.Populate(m, dr, thisData, thisType, pData.MappedCols, colUpperNames, colCount, hasSetters, propertyTypes, propertyFormats, allNestedPData, pData.FDAIndexes);
                 data.FastDynamicAccess.Set(model, nest.Key, m);
-            }
+            }*/
         }
 
         /// <summary>

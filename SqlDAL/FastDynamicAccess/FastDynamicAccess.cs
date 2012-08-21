@@ -296,7 +296,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="allNestedPData">All nested PopulateData objects.</param>
         /// <param name="modelsData">All ModelData objects.</param>
         /// <returns>A population delegate.</returns>
-        internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType, ModelData data, Dictionary<Type, PopulateData> allNestedPData, Dictionary<Type, ModelData> modelsData)
+        internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType, ModelData data, Dictionary<Type, PopulateData> allNestedPData, Dictionary<Type, ModelData> modelsData, Boolean isGeneric)
         {
             var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.Assembly.FullName + modelType.FullName).GenerateHash().Replace("-", ""));
             GetModelPopulateMethodDelegate gmpmd;
@@ -307,11 +307,25 @@ namespace System.Data.DBAccess.Generic
 
                 //var nestedModelIndexes = new Dictionary<Type, int>();
 
-                var meth = new DynamicMethod(methodName, typeof(void), new Type[] { modelType, typeof(Object), typeof(Object[]) }, true);
+                var meth = new DynamicMethod(methodName, typeof(void), new Type[] { modelType, typeof(Object), typeof(List<Object[]>), typeof(int) }, true);
                 var il = meth.GetILGenerator();
 
+                il.DeclareLocal(typeof(int)); //int i
                 il.DeclareLocal(typeof(Object)); // stores object from dr[]
 
+                var exitLoopLabel = il.DefineLabel();
+                var beginLoopLabel = il.DefineLabel();
+                
+                il.Emit(OpCodes.Ldc_I4_0);
+                il.Emit(OpCodes.Ldarg_3); //num of elements
+                //if no elements to populate, quit
+                il.Emit(OpCodes.Bge, exitLoopLabel);
+
+                //int i = 0;
+                il.Emit(OpCodes.Ldc_I4_0);
+                il.Emit(OpCodes.Stloc_0);
+
+                il.MarkLabel(beginLoopLabel);
                 //do parent model
                 FastDynamicAccess.EmitIL(il, modelType, propertyNames, stringFormats, propertyTypes, numOfModels++, false, null, null);
 
@@ -322,6 +336,24 @@ namespace System.Data.DBAccess.Generic
                     FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref numOfModels, modelsData, nest.Key, modelType, !data.NestedTypesInstantiatedInConstructor[thisType]);
                 }
 
+                var listType = isGeneric ? typeof(List<>).MakeGenericType(new Type[] { modelType }) : typeof(List<>).MakeGenericType(new Type[] { typeof(Object) });
+
+                //add it to the list
+                il.Emit(OpCodes.Ldarg_1); // List<T> that was passed in
+                il.Emit(OpCodes.Castclass, listType);
+                il.Emit(OpCodes.Ldloc_2); // the model that we populated
+                il.Emit(OpCodes.Callvirt, listType.GetMethod("Add"));
+
+                il.Emit(OpCodes.Ldloc_0);
+                il.Emit(OpCodes.Ldc_I4_1);
+                il.Emit(OpCodes.Add);
+                il.Emit(OpCodes.Stloc_0);
+                il.Emit(OpCodes.Ldloc_0);
+                il.Emit(OpCodes.Ldarg_3);
+                il.Emit(OpCodes.Blt, beginLoopLabel);
+
+                il.MarkLabel(exitLoopLabel);
+
                 il.Emit(OpCodes.Ret);
 
                 gmpmd = (GetModelPopulateMethodDelegate)meth.CreateDelegate(typeof(GetModelPopulateMethodDelegate));
@@ -329,6 +361,17 @@ namespace System.Data.DBAccess.Generic
             }
 
             return gmpmd;
+        }
+
+        /// <summary>
+        /// Returns MSIL to return the current object[] from the dataRows list that we are iterating over.
+        /// </summary>
+        /// <param name="il">The IL Generator</param>
+        private static void GetObjectArrayFromList(ILGenerator il)
+        {
+            il.Emit(OpCodes.Ldarg_2); //List<Object[]>
+            il.Emit(OpCodes.Ldloc_0); //int i
+            il.Emit(OpCodes.Callvirt, typeof(List<Object[]>).GetMethod("get_Item"));
         }
 
         /// <summary>
@@ -393,6 +436,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="instantiateNest">True/False if this child needs to be instantiated in the parent before use or not.</param>
         private static void GenerateChildIL(ILGenerator il, Type modelType, PopulateData data, Dictionary<Type, PopulateData> allNestedPData, ref int thisModelNum, Dictionary<Type, ModelData> modelsData, String parentProperty, Type parentType, Boolean instantiateNest)
         {
+            //emit il for this model
             FastDynamicAccess.EmitIL(il, modelType, data.MappedCols, data.PropertyFormats, data.PropertyTypes, thisModelNum++, instantiateNest, parentType, parentProperty);
 
             //set the property of the parent where this child goes into
@@ -400,11 +444,11 @@ namespace System.Data.DBAccess.Generic
             //This is backwards compared to how I would have written this in actual C#, but it simplifies the MSIL
 
             //load the parent model to the top of the stack
-            FastDynamicAccess.Ldloc_i(il, thisModelNum - 2);
+            FastDynamicAccess.Ldloc_i(il, thisModelNum - 1);
             il.Emit(OpCodes.Castclass, parentType);
 
             //load THIS model to the top of the stack
-            FastDynamicAccess.Ldloc_i(il, thisModelNum - 1);
+            FastDynamicAccess.Ldloc_i(il, thisModelNum);
             il.Emit(OpCodes.Castclass, modelType);
 
             il.Emit(OpCodes.Callvirt, parentType.GetMethod("set_" + parentProperty));
@@ -435,21 +479,21 @@ namespace System.Data.DBAccess.Generic
 
             il.DeclareLocal(modelType); // stores model reference
 
-            if (thisModelNum == 1)
-                il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
-            else if (instantiateNest) //else push a nested class onto the stack
+            //if (thisModelNum == 1)
+            //    il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
+            if (thisModelNum == 1 || instantiateNest) //if it's the top model or a nested class that needs instantiation, create it
             {
                 il.Emit(OpCodes.Newobj, modelType.GetConstructor(new Type[] { }));
             }
             else // use the existing nested model
             {
-                FastDynamicAccess.Ldloc_i(il, thisModelNum - 1);
+                FastDynamicAccess.Ldloc_i(il, thisModelNum);
                 il.Emit(OpCodes.Callvirt, parentType.GetMethod("get_" + parentProperty));
             }
 
             il.Emit(OpCodes.Castclass, modelType); //cast it to the model type since it's an object
 
-            FastDynamicAccess.Stloc_i(il, thisModelNum);
+            FastDynamicAccess.Stloc_i(il, thisModelNum + 1);
 
             /*
              * for (int i = 0; i < dr.Length; i++)
@@ -479,8 +523,8 @@ namespace System.Data.DBAccess.Generic
                     continue;
 
                 il.BeginExceptionBlock();
-
-                switch (thisModelNum)
+                FastDynamicAccess.Ldloc_i(il, thisModelNum + 1);
+                /*switch (thisModelNum)
                 {
                     case 1:
                         il.Emit(OpCodes.Ldloc_1); //store it into the local variable
@@ -494,13 +538,14 @@ namespace System.Data.DBAccess.Generic
                     default:
                         il.Emit(OpCodes.Ldloc_S, thisModelNum);
                         break;
-                }
+                }*/
 
                 if (stringFormats[i] != null)
                 {
                     il.Emit(OpCodes.Ldstr, stringFormats[i]); //load string format string onto stack if needed
                 }
-                il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+                GetObjectArrayFromList(il);
+                //il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
 
                 //load the array index we want to read from the Object[] dr
                 if (i <= 8)
@@ -522,8 +567,8 @@ namespace System.Data.DBAccess.Generic
                     if (!pType.IsValueType || pType.IsNullableValueType())
                     {
                         //if it's a ref type we'll want to store it for later use
-                        il.Emit(OpCodes.Stloc_0); //store it for later use
-                        il.Emit(OpCodes.Ldloc_0);
+                        il.Emit(OpCodes.Stloc_1); //store it for later use
+                        il.Emit(OpCodes.Ldloc_1);
 
                         /*if (value == DBNull.Value)
                          *      value = null;
@@ -536,7 +581,7 @@ namespace System.Data.DBAccess.Generic
                         il.Emit(OpCodes.Ldsfld, typeof(DBNull).GetField("Value"));
                         il.Emit(OpCodes.Beq, loadNullLabel); //if (value == DBNull.Value) jump to load null
 
-                        il.Emit(OpCodes.Ldloc_0); //otherwise get the value back on the top of the stack
+                        il.Emit(OpCodes.Ldloc_1); //otherwise get the value back on the top of the stack
                         il.Emit(OpCodes.Br, setPropertyLabel);
 
                         //load null onto stack and jump to set the method
@@ -572,11 +617,12 @@ namespace System.Data.DBAccess.Generic
                 //load the value that we are trying to set... if it was a value type we never stored it in loc1 to increase speed for value types.
                 if (!pType.IsValueType)
                 {
-                    il.Emit(OpCodes.Ldloc_0); // the object from dr[]
+                    il.Emit(OpCodes.Ldloc_1); // the object from dr[]
                 }
                 else
                 {
-                    il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+                    GetObjectArrayFromList(il);
+                    //il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
 
                     //load the array index we want to read from the Object[] dr
                     if (i <= 8)
@@ -595,7 +641,7 @@ namespace System.Data.DBAccess.Generic
             }
         }
 
-        internal delegate void GetModelPopulateMethodDelegate(Object model, Object[] dr);
+        internal delegate void GetModelPopulateMethodDelegate(Object list, List<Object[]> drs, int rowCount);
 
         /// <summary>
         /// Gets the specified property of the provided object.
