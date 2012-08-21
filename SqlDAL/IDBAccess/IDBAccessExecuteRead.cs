@@ -274,96 +274,41 @@ namespace System.Data.DBAccess.Generic
 
             var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData, true);
 
-            /*if (db.IsMultiThreaded)
+            if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
-                db.WriteTrace(TraceLevel.DEBUG, "Multithreaded using {0} threads", db.Threads);
-                if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
-                {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
-                    var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
-                    var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
+                db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
+                var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
+                var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
 
-                    return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
-                    {
-                        T t = new T();
-                        del(t, dr);
-                        db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
-                        return t;
-                    }).ToList();
-                }
-                else if (modelType.DerivesInterface(typeof(IQuickPopulate)))
-                {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating with IQuickPopulate.");
-                    var indexes = new Dictionary<String, int>();
-                    for (int i = 0; i < tuple.ColumnNames.Count; i++)
-                        indexes.Add(tuple.ColumnNames[i], i);
+                del(retList, dataRows, numItems);
 
-                    return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
-                    {
-                        T t = new T();
-                        ((IQuickPopulate)t).DALPopulate(dr, indexes);
-                        return t;
-                    }).ToList();
-                }
-                else
+                for (int i = 0; i < numItems; i++)
                 {
-                    return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
-                    {
-                        T t = new T();
-                        del(t, dr);
-                        return t;
-                    }).ToList();
+                    db.PopulateDefaultModelValues(retList[i], dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                 }
+
+                return retList;
             }
-            else*/
+            else if (modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
-                db.WriteTrace(TraceLevel.DEBUG, "Single threaded.");
-                if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
+                db.WriteTrace(TraceLevel.DEBUG, "Populating with IQuickPopulate.");
+                var indexes = new Dictionary<String, int>();
+                for (int i = 0; i < tuple.ColumnNames.Count; i++)
+                    indexes.Add(tuple.ColumnNames[i], i);
+
+                for (int i = 0; i < numItems; i++)
                 {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
-                    var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
-                    var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
-
-                    del(retList, dataRows, numItems);
-
-                    for (int i = 0; i < numItems; i++)
-                    {
-                        //T t = new T();
-                        //del(t, dataRows[i], numItems);
-                        db.PopulateDefaultModelValues(retList[i], dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
-                        //retList.Add(t);
-                    }
-
-                    return retList;
+                    T t = new T();
+                    ((IQuickPopulate)t).DALPopulate(dataRows[i], indexes);
+                    retList.Add(t);
                 }
-                else if (modelType.DerivesInterface(typeof(IQuickPopulate)))
-                {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating with IQuickPopulate.");
-                    var indexes = new Dictionary<String, int>();
-                    for (int i = 0; i < tuple.ColumnNames.Count; i++)
-                        indexes.Add(tuple.ColumnNames[i], i);
 
-                    for (int i = 0; i < numItems; i++)
-                    {
-                        T t = new T();
-                        ((IQuickPopulate)t).DALPopulate(dataRows[i], indexes);
-                        retList.Add(t);
-                    }
-
-                    return retList;
-                }
-                else
-                {
-                    del(retList, dataRows, numItems);
-                    /*for (int i = 0; i < numItems; i++)
-                    {
-                        T t = new T();
-                        
-                        retList.Add(t);
-                    }*/
-
-                    return retList;
-                }
+                return retList;
+            }
+            else
+            {
+                del(retList, dataRows, numItems);
+                return retList;
             }
         }
 
@@ -413,100 +358,44 @@ namespace System.Data.DBAccess.Generic
 
             var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData, false);
 
-            /*Iif (db.IsMultiThreaded)
+            int numItems = dataRows.Count;
+            List<Object> retList = new List<Object>(numItems);
+
+            if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
-                db.WriteTrace(TraceLevel.DEBUG, "Multithreaded using {0} threads", db.Threads);
-                if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
-                {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
-                    var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
-                    var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
+                db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
+                var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
+                var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
 
-                    return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
-                    {
-                        Object t = Activator.CreateInstance(modelType);
-                        del(t, dr);
-                        db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
-                        return t;
-                    }).ToList();
-                }
-                else if (modelType.DerivesInterface(typeof(IQuickPopulate)))
-                {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating with IQuickPopulate.");
-                    var indexes = new Dictionary<String, int>();
-                    for (int i = 0; i < tuple.ColumnNames.Count; i++)
-                        indexes.Add(tuple.ColumnNames[i], i);
+                del(retList, dataRows, numItems);
 
-                    return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
-                    {
-                        Object t = Activator.CreateInstance(modelType);
-                        ((IQuickPopulate)t).DALPopulate(dr, indexes);
-                        return t;
-                    }).ToList();
-                }
-                else
+                for (int i = 0; i < numItems; i++)
                 {
-                    return dataRows.AsParallel().AsOrdered().WithDegreeOfParallelism(db.Threads).Select(dr =>
-                    {
-                        Object t = Activator.CreateInstance(modelType);
-                        del(t, dr);
-                        return t;
-                    }).ToList();
+                    db.PopulateDefaultModelValues(retList[i], dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                 }
+
+                return retList;
             }
-            else*/
+            else if (modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
-                db.WriteTrace(TraceLevel.DEBUG, "Single threaded.");
-                int numItems = dataRows.Count;
-                List<Object> retList = new List<Object>(numItems);
+                db.WriteTrace(TraceLevel.DEBUG, "Populating with IQuickPopulate.");
+                var indexes = new Dictionary<String, int>();
+                for (int i = 0; i < tuple.ColumnNames.Count; i++)
+                    indexes.Add(tuple.ColumnNames[i], i);
 
-                if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
+                for (int i = 0; i < numItems; i++)
                 {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
-                    var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
-                    var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
-
-                    del(retList, dataRows, numItems);
-
-                    for (int i = 0; i < numItems; i++)
-                    {
-                        //Object t = Activator.CreateInstance(modelType);
-                        
-                        db.PopulateDefaultModelValues(retList[i], dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
-                        //retList.Add(t);
-                    }
-
-                    return retList;
+                    Object t = Activator.CreateInstance(modelType);
+                    ((IQuickPopulate)t).DALPopulate(dataRows[i], indexes);
+                    retList.Add(t);
                 }
-                else if (modelType.DerivesInterface(typeof(IQuickPopulate)))
-                {
-                    db.WriteTrace(TraceLevel.DEBUG, "Populating with IQuickPopulate.");
-                    var indexes = new Dictionary<String, int>();
-                    for (int i = 0; i < tuple.ColumnNames.Count; i++)
-                        indexes.Add(tuple.ColumnNames[i], i);
 
-                    for (int i = 0; i < numItems; i++)
-                    {
-                        Object t = Activator.CreateInstance(modelType);
-                        ((IQuickPopulate)t).DALPopulate(dataRows[i], indexes);
-                        retList.Add(t);
-                    }
-
-                    return retList;
-                }
-                else
-                {
-                    del(retList, dataRows, numItems);
-
-                    /*for (int i = 0; i < numItems; i++)
-                    {
-                        Object t = Activator.CreateInstance(modelType);
-                        del(t, dataRows[i]);
-                        retList.Add(t);
-                    }*/
-
-                    return retList;
-                }
+                return retList;
+            }
+            else
+            {
+                del(retList, dataRows, numItems);
+                return retList;
             }
         }
         #endregion

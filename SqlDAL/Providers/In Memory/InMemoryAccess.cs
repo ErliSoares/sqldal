@@ -133,23 +133,6 @@ namespace System.Data.DBAccess.Generic.Providers.In_Memory
         }
 
         /// <summary>
-        /// IsMultiThreaded not supported for InMemory provider.
-        /// </summary>
-        bool IDBAccess.IsMultiThreaded
-        {
-            get { throw new NotImplementedException("IsMultiThreaded not supported for InMemory provider."); }
-        }
-
-        /// <summary>
-        /// Threads not supported for InMemory provider.
-        /// </summary>
-        int IDBAccess.Threads
-        {
-            get { throw new NotImplementedException("Threads not supported for InMemory provider."); }
-            set { throw new NotImplementedException("Threads not supported for InMemory provider."); }
-        }
-
-        /// <summary>
         /// TraceOutputLevel not supported for InMemory provider.
         /// </summary>
         TraceLevel IDBAccess.TraceOutputLevel

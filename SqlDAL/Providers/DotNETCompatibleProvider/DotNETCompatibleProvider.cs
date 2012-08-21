@@ -91,8 +91,6 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
             this.OutputValues = new Dictionary<String, Object>();
             ((IDBAccess)this).ModelsData = new Dictionary<Type, ModelData>();
             this.ColumnToPropertyMappings = new Dictionary<DataTable, Dictionary<Type, Dictionary<String, String>>>();
-
-            this.Threads = 1;
         }
         #endregion
 
@@ -148,29 +146,6 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
         /// Sets whether or not model properties not returned by a query should be defaulted to the value defined in the [DALDefaultValue] attribute.
         /// </summary>
         public Boolean PopulateDefaultValues { get; set; }
-
-        /// <summary>
-        /// Returns true/false if the models should be populated using multiple threads or not.
-        /// </summary>
-        Boolean IDBAccess.IsMultiThreaded { get { return this.Threads > 1; } }
-
-        private int m_threads = 1;
-        /// <summary>
-        /// The number of threads to use when populating the return from ExecuteRead and ExecuteSetRead.  Allowable range is 1-64.
-        /// </summary>
-        public int Threads
-        {
-            get { return m_threads; }
-            set
-            {
-                if (value < 1)
-                    m_threads = 1;
-                else if (value > 64)
-                    m_threads = 64;
-                else
-                    m_threads = value;
-            }
-        }
 
         /// <summary>
         /// The level of trace information to output.

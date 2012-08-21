@@ -53,16 +53,6 @@ namespace System.Data.DBAccess.Generic
         Boolean PopulateDefaultValues { get; set; }
 
         /// <summary>
-        /// Returns true/false if the models should be populated using multiple threads or not.
-        /// </summary>
-        Boolean IsMultiThreaded { get; }
-
-        /// <summary>
-        /// The number of threads to use when populating the return from ExecuteRead and ExecuteSetRead.  Allowable range is 1-64.
-        /// </summary>
-        int Threads { get; set; }
-
-        /// <summary>
         /// The level of trace information to output.
         /// </summary>
         TraceLevel TraceOutputLevel { get; set; }

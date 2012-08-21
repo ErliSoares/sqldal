@@ -49,8 +49,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
         public delegate void OnTestCompletedHandler(String testName);
         public static event OnTestCompletedHandler OnTestCompleted;
 
-        public static int Threads { get; set; }
-
         private static void RaiseOnTestCompleted(String testName)
         {
             if (PerformanceTests.OnTestCompleted != null)
@@ -63,7 +61,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             ExecuteReadQuickTuple sampleData = ConvertObjectToExecuteReadTuple(input, iterationsPerRun);
 
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             List<TimeSpan> times = new List<TimeSpan>();
             var start = DateTime.Now;
@@ -102,7 +99,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 inputValues.Add(input);
 
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             List<TimeSpan> times = new List<TimeSpan>();
             var start = DateTime.Now;
@@ -129,7 +125,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -159,7 +154,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -191,7 +185,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -225,7 +218,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -261,7 +253,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -299,7 +290,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -339,7 +329,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -381,7 +370,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -425,7 +413,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -471,7 +458,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -519,7 +505,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -569,7 +554,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -621,7 +605,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -675,7 +658,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -731,7 +713,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 sampleData
             };
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
@@ -752,7 +733,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
         {
             ExecuteReadQuickTuple sampleData = ConvertObjectToExecuteReadTuple(input, iterationsPerRun);
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             List<TimeSpan> times = new List<TimeSpan>();
             var start = DateTime.Now;
@@ -778,7 +758,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T2 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -803,7 +782,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T3 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -829,7 +807,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T4 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -856,7 +833,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T5 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -884,7 +860,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T6 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -913,7 +888,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T7 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -943,7 +917,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T8 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -974,7 +947,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T9 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1006,7 +978,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T10 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1039,7 +1010,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T11 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1073,7 +1043,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T12 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1108,7 +1077,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T13 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1144,7 +1112,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T14 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1181,7 +1148,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T15 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1219,7 +1185,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             where T16 : class, new()
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
@@ -1241,7 +1206,6 @@ namespace System.Data.DBAccess.Generic.Benchmarking
         public static TestCase ExecuteRelatedSetReadTest(String name, List<DALRelationship> relationships, List<ExecuteReadQuickTuple> tables, List<Type> returnTypes, Boolean populateDefaultValues, int timesToRun, int childrenPerParent)
         {
             var db = new SqlDBAccess();
-            db.Threads = PerformanceTests.Threads;
 
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
