@@ -1,4 +1,4 @@
-/*
+﻿/*
 Copyright 2012 Brian Adams
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -727,7 +727,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="fdaIndexes">List of property indexes to use for setting via the FDA object.</param>
         internal static void Populate(this IDBAccess db, Object model, Object[] dr, ModelData data, Type modelType, List<String> mappedCols, List<String> colUpperNames, int colCount, List<Boolean> hasSetters, List<Type> propertyTypes, List<String> propertyFormats, Dictionary<Type, PopulateData> allNestedPData, List<int> fdaIndexes)
         {
-            FastDynamicAccess.GetModelPopulateMethod(mappedCols, propertyFormats, propertyTypes, model.GetType())(model, dr);
+            FastDynamicAccess.GetModelPopulateMethod(mappedCols, propertyFormats, propertyTypes, model.GetType(), data, allNestedPData, db.ModelsData)(model, dr);
 
             foreach (var nest in data.NestedModelBaseFields)
             {

@@ -285,83 +285,246 @@ namespace System.Data.DBAccess.Generic
         }
 
         private static Dictionary<String, GetModelPopulateMethodDelegate> s_ModelPopulateCache = new Dictionary<String, GetModelPopulateMethodDelegate>();
-        internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType)
+        /// <summary>
+        /// Generates a method which will populate an instance of a class with the given data.
+        /// </summary>
+        /// <param name="propertyNames">The mapped property/column names.  Properties which do not map should be null.</param>
+        /// <param name="stringFormats">The string formats to apply to the properties.</param>
+        /// <param name="propertyTypes">The type of each property.</param>
+        /// <param name="modelType">This model type.</param>
+        /// <param name="data">The ModelData object for this model type.</param>
+        /// <param name="allNestedPData">All nested PopulateData objects.</param>
+        /// <param name="modelsData">All ModelData objects.</param>
+        /// <returns>A population delegate.</returns>
+        internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType, ModelData data, Dictionary<Type, PopulateData> allNestedPData, Dictionary<Type, ModelData> modelsData)
         {
             var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.Assembly.FullName + modelType.FullName).GenerateHash().Replace("-", ""));
             GetModelPopulateMethodDelegate gmpmd;
 
             if (!s_ModelPopulateCache.TryGetValue(methodName, out gmpmd))
             {
-                var sfMeth = typeof(String).GetMethod("Format", new Type[] { typeof(String), typeof(Object) });
+                int numOfModels = 1;
+
+                //var nestedModelIndexes = new Dictionary<Type, int>();
+
                 var meth = new DynamicMethod(methodName, typeof(void), new Type[] { modelType, typeof(Object), typeof(Object[]) }, true);
                 var il = meth.GetILGenerator();
 
-                //il.BeginExceptionBlock();
-                il.DeclareLocal(modelType); // stores model reference
                 il.DeclareLocal(typeof(Object)); // stores object from dr[]
 
-                il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
-                il.Emit(OpCodes.Castclass, modelType); //cast it to the model type since it's an object
-                il.Emit(OpCodes.Stloc_0); //store it into the local variable
+                //do parent model
+                FastDynamicAccess.EmitIL(il, modelType, propertyNames, stringFormats, propertyTypes, numOfModels++, false, null, null);
 
-                /*
-                 * for (int i = 0; i < dr.Length; i++)
-                 * {
-                 *      if (model.Property[i].IsValueType)
-                 *      {
-                 *          model.Property[i] = (T)dr[i];
-                 *      }
-                 *      else
-                 *      {
-                 *          if (dr[i] == DBNull.Value)
-                 *              model.Property[i] = null;
-                 *          else
-                 *              model.Property[i] = (T)dr[i];
-                 *      }
-                 * }
-                 */
-
-                for (int i = 0; i < propertyNames.Count; i++)
+                //for each child, generate child IL
+                foreach (var nest in data.NestedModelBaseFields)
                 {
-                    //no mapping from datarow to model, ignore it
-                    if (propertyNames[i] == null)
-                        continue;
+                    var thisType = nest.Value.FieldType;
+                    FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref numOfModels, modelsData, nest.Key, modelType, !data.NestedTypesInstantiatedInConstructor[thisType]);
+                }
 
-                    var setMethod = modelType.GetMethod("set_" + propertyNames[i]);
-                    if (setMethod == null)
-                        continue;
+                il.Emit(OpCodes.Ret);
 
-                    il.BeginExceptionBlock();
-                    il.Emit(OpCodes.Ldloc_0);
-                    if (stringFormats[i] != null)
-                    {
-                        il.Emit(OpCodes.Ldstr, stringFormats[i]); //load string format string onto stack if needed
-                    }
-                    il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+                gmpmd = (GetModelPopulateMethodDelegate)meth.CreateDelegate(typeof(GetModelPopulateMethodDelegate));
+                s_ModelPopulateCache.Add(methodName, gmpmd);
+            }
 
-                    //load the array index we want to read from the Object[] dr
-                    if (i <= 8)
-                        il.Emit(GetLDC_I4_Code(i));
-                    else
-                        il.Emit(OpCodes.Ldc_I4_S, i);
+            return gmpmd;
+        }
 
-                    il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+        /// <summary>
+        /// Emits a Stloc opcode for the given index.
+        /// </summary>
+        /// <param name="il">The IL generator.</param>
+        /// <param name="i">The index.</param>
+        private static void Stloc_i(ILGenerator il, int i)
+        {
+            switch (i)
+            {
+                case 1:
+                    il.Emit(OpCodes.Stloc_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Stloc_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Stloc_3);
+                    break;
+                default:
+                    il.Emit(OpCodes.Stloc_S, i);
+                    break;
+            }
+        }
 
-                    var pType = propertyTypes[i];
+        /// <summary>
+        /// Emits a Ldloc opcode for the given index.
+        /// </summary>
+        /// <param name="il">The IL generator.</param>
+        /// <param name="i">The index.</param>
+        private static void Ldloc_i(ILGenerator il, int i)
+        {
+            switch (i)
+            {
+                case 1:
+                    il.Emit(OpCodes.Ldloc_1);
+                    break;
+                case 2:
+                    il.Emit(OpCodes.Ldloc_2);
+                    break;
+                case 3:
+                    il.Emit(OpCodes.Ldloc_3);
+                    break;
+                default:
+                    il.Emit(OpCodes.Ldloc_S, i);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Generates a population method for a nested class.
+        /// </summary>
+        /// <param name="il">The IL generator.</param>
+        /// <param name="modelType">The child model type.</param>
+        /// <param name="data">The child's PopulateData object.</param>
+        /// <param name="allNestedPData">All nested PopulateData objects.</param>
+        /// <param name="thisModelNum">This model number.  Used for storing/loading the correct local variable.</param>
+        /// <param name="modelsData">All ModelData objects.</param>
+        /// <param name="parentProperty">The parent property name into which this model will be set.</param>
+        /// <param name="parentType">The parent class type.</param>
+        /// <param name="instantiateNest">True/False if this child needs to be instantiated in the parent before use or not.</param>
+        private static void GenerateChildIL(ILGenerator il, Type modelType, PopulateData data, Dictionary<Type, PopulateData> allNestedPData, ref int thisModelNum, Dictionary<Type, ModelData> modelsData, String parentProperty, Type parentType, Boolean instantiateNest)
+        {
+            FastDynamicAccess.EmitIL(il, modelType, data.MappedCols, data.PropertyFormats, data.PropertyTypes, thisModelNum++, instantiateNest, parentType, parentProperty);
+
+            //set the property of the parent where this child goes into
+            //This actually assigns the child into the parent before any possible children of this child are dealt with.
+            //This is backwards compared to how I would have written this in actual C#, but it simplifies the MSIL
+
+            //load the parent model to the top of the stack
+            FastDynamicAccess.Ldloc_i(il, thisModelNum - 2);
+            il.Emit(OpCodes.Castclass, parentType);
+
+            //load THIS model to the top of the stack
+            FastDynamicAccess.Ldloc_i(il, thisModelNum - 1);
+            il.Emit(OpCodes.Castclass, modelType);
+
+            il.Emit(OpCodes.Callvirt, parentType.GetMethod("set_" + parentProperty));
+
+            //for each child, generate child IL
+            foreach (var nest in modelsData[modelType].NestedModelBaseFields)
+            {
+                var thisType = nest.Value.FieldType;
+                FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref thisModelNum, modelsData, nest.Key, modelType, !modelsData[modelType].NestedTypesInstantiatedInConstructor[thisType]);
+            }
+        }
+
+        /// <summary>
+        /// Emits IL to populate a class.
+        /// </summary>
+        /// <param name="il">The IL generator.</param>
+        /// <param name="modelType">The type of class being popoulated.</param>
+        /// <param name="propertyNames">The mapped property/column names.  Properties which do not map should be null.</param>
+        /// <param name="stringFormats">The string formats to apply to the properties.</param>
+        /// <param name="propertyTypes">The type of each property.</param>
+        /// <param name="thisModelNum">This model number.  Used for storing/loadnig the correct local variable.</param>
+        /// <param name="instantiateNest">True/False if this child needs to be instantiated in the parent before use or not.</param>
+        /// <param name="parentType">The parnet class type.  Only used if instantiateNest is true.</param>
+        /// <param name="parentProperty">The parent property name into which this class will be set.  Only used if instantiateNest is true.</param>
+        private static void EmitIL(ILGenerator il, Type modelType, List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, int thisModelNum, Boolean instantiateNest, Type parentType, String parentProperty)
+        {
+            var sfMeth = typeof(String).GetMethod("Format", new Type[] { typeof(String), typeof(Object) });
+
+            il.DeclareLocal(modelType); // stores model reference
+
+            if (thisModelNum == 1)
+                il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
+            else if (instantiateNest) //else push a nested class onto the stack
+            {
+                il.Emit(OpCodes.Newobj, modelType.GetConstructor(new Type[] { }));
+            }
+            else // use the existing nested model
+            {
+                FastDynamicAccess.Ldloc_i(il, thisModelNum - 1);
+                il.Emit(OpCodes.Callvirt, parentType.GetMethod("get_" + parentProperty));
+            }
+
+            il.Emit(OpCodes.Castclass, modelType); //cast it to the model type since it's an object
+
+            FastDynamicAccess.Stloc_i(il, thisModelNum);
+
+            /*
+             * for (int i = 0; i < dr.Length; i++)
+             * {
+             *      if (model.Property[i].IsValueType)
+             *      {
+             *          model.Property[i] = (T)dr[i];
+             *      }
+             *      else
+             *      {
+             *          if (dr[i] == DBNull.Value)
+             *              model.Property[i] = null;
+             *          else
+             *              model.Property[i] = (T)dr[i];
+             *      }
+             * }
+             */
+
+            for (int i = 0; i < propertyNames.Count; i++)
+            {
+                //no mapping from datarow to model, ignore it
+                if (propertyNames[i] == null)
+                    continue;
+
+                var setMethod = modelType.GetMethod("set_" + propertyNames[i]);
+                if (setMethod == null)
+                    continue;
+
+                il.BeginExceptionBlock();
+
+                switch (thisModelNum)
+                {
+                    case 1:
+                        il.Emit(OpCodes.Ldloc_1); //store it into the local variable
+                        break;
+                    case 2:
+                        il.Emit(OpCodes.Ldloc_2);
+                        break;
+                    case 3:
+                        il.Emit(OpCodes.Ldloc_3);
+                        break;
+                    default:
+                        il.Emit(OpCodes.Ldloc_S, thisModelNum);
+                        break;
+                }
+
+                if (stringFormats[i] != null)
+                {
+                    il.Emit(OpCodes.Ldstr, stringFormats[i]); //load string format string onto stack if needed
+                }
+                il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+
+                //load the array index we want to read from the Object[] dr
+                if (i <= 8)
+                    il.Emit(GetLDC_I4_Code(i));
+                else
+                    il.Emit(OpCodes.Ldc_I4_S, i);
+
+                il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+
+                var pType = propertyTypes[i];
+
+                if (stringFormats[i] != null)
+                {
+                    il.Emit(OpCodes.Call, sfMeth); //call the string format method if needed
+                    //if string format then we can skip right to the bottom
+                }
+                else
+                {
                     if (!pType.IsValueType || pType.IsNullableValueType())
                     {
                         //if it's a ref type we'll want to store it for later use
-                        il.Emit(OpCodes.Stloc_1); //store it for later use
-                        il.Emit(OpCodes.Ldloc_1);
-                    }
+                        il.Emit(OpCodes.Stloc_0); //store it for later use
+                        il.Emit(OpCodes.Ldloc_0);
 
-                    if (stringFormats[i] != null)
-                    {
-                        il.Emit(OpCodes.Call, sfMeth); //call the string format method if needed
-                        //if string format then we can skip right to the bottom
-                    }
-                    else if (!pType.IsValueType || pType.IsNullableValueType()) // ref type
-                    {
                         /*if (value == DBNull.Value)
                          *      value = null;
                          * 
@@ -373,7 +536,7 @@ namespace System.Data.DBAccess.Generic
                         il.Emit(OpCodes.Ldsfld, typeof(DBNull).GetField("Value"));
                         il.Emit(OpCodes.Beq, loadNullLabel); //if (value == DBNull.Value) jump to load null
 
-                        il.Emit(OpCodes.Ldloc_1); //otherwise get the value back on the top of the stack
+                        il.Emit(OpCodes.Ldloc_0); //otherwise get the value back on the top of the stack
                         il.Emit(OpCodes.Br, setPropertyLabel);
 
                         //load null onto stack and jump to set the method
@@ -397,46 +560,39 @@ namespace System.Data.DBAccess.Generic
                         il.Emit(OpCodes.Castclass, pType);
                         il.Emit(OpCodes.Unbox_Any, pType); //unbox if a value type
                     }
-
-                    il.Emit(OpCodes.Callvirt, setMethod); //set the property
-
-                    il.BeginCatchBlock(typeof(InvalidCastException));
-                    il.Emit(OpCodes.Pop); //exception is first on the stack
-                    //load exception message.. only variable we don't know at method creation time is the type of the value that failed
-                    il.Emit(OpCodes.Ldstr, String.Format("Object passed with type '{{0}}' cannot be assigned to the type '{0}' (model '{1}' property '{2}')", propertyTypes[i], modelType, propertyNames[i]));
-
-                    //load the value that we are trying to set... if it was a value type we never stored it in loc1 to increase speed for value types.
-                    if (!pType.IsValueType)
-                    {
-                        il.Emit(OpCodes.Ldloc_1); // the object from dr[]
-                    }
-                    else
-                    {
-                        il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
-
-                        //load the array index we want to read from the Object[] dr
-                        if (i <= 8)
-                            il.Emit(GetLDC_I4_Code(i));
-                        else
-                            il.Emit(OpCodes.Ldc_I4_S, i);
-
-                        il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
-                    }
-
-                    il.Emit(OpCodes.Callvirt, typeof(Object).GetMethod("GetType"));
-                    il.Emit(OpCodes.Call, sfMeth);
-                    il.Emit(OpCodes.Newobj, typeof(ModelPropertyColumnMismatchException).GetConstructor(new Type[] { typeof(String) }));
-                    il.Emit(OpCodes.Throw);
-                    il.EndExceptionBlock();
                 }
 
-                il.Emit(OpCodes.Ret);
+                il.Emit(OpCodes.Callvirt, setMethod); //set the property
 
-                gmpmd = (GetModelPopulateMethodDelegate)meth.CreateDelegate(typeof(GetModelPopulateMethodDelegate));
-                s_ModelPopulateCache.Add(methodName, gmpmd);
+                il.BeginCatchBlock(typeof(InvalidCastException));
+                il.Emit(OpCodes.Pop); //exception is first on the stack
+                //load exception message.. only variable we don't know at method creation time is the type of the value that failed
+                il.Emit(OpCodes.Ldstr, String.Format("Object passed with type '{{0}}' cannot be assigned to the type '{0}' (model '{1}' property '{2}')", propertyTypes[i], modelType, propertyNames[i]));
+
+                //load the value that we are trying to set... if it was a value type we never stored it in loc1 to increase speed for value types.
+                if (!pType.IsValueType)
+                {
+                    il.Emit(OpCodes.Ldloc_0); // the object from dr[]
+                }
+                else
+                {
+                    il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+
+                    //load the array index we want to read from the Object[] dr
+                    if (i <= 8)
+                        il.Emit(GetLDC_I4_Code(i));
+                    else
+                        il.Emit(OpCodes.Ldc_I4_S, i);
+
+                    il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+                }
+
+                il.Emit(OpCodes.Callvirt, typeof(Object).GetMethod("GetType"));
+                il.Emit(OpCodes.Call, sfMeth);
+                il.Emit(OpCodes.Newobj, typeof(ModelPropertyColumnMismatchException).GetConstructor(new Type[] { typeof(String) }));
+                il.Emit(OpCodes.Throw);
+                il.EndExceptionBlock();
             }
-
-            return gmpmd;
         }
 
         internal delegate void GetModelPopulateMethodDelegate(Object model, Object[] dr);

@@ -272,7 +272,7 @@ namespace System.Data.DBAccess.Generic
             int numItems = dataRows.Count;
             List<T> retList = new List<T>(numItems);
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType);
+            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData);
 
             if (db.IsMultiThreaded)
             {
@@ -287,25 +287,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         T t = new T();
                         del(t, dr);
-                        //db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dr, thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
                         db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                         return t;
                     }).ToList();
@@ -330,25 +311,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         T t = new T();
                         del(t, dr);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dr, thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
-                        //db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         return t;
                     }).ToList();
                 }
@@ -366,25 +328,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         T t = new T();
                         del(t, dataRows[i]);
-                        //db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dataRows[i], thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
                         db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                         retList.Add(t);
                     }
@@ -413,25 +356,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         T t = new T();
                         del(t, dataRows[i]);
-                        //db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dataRows[i], thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
                         retList.Add(t);
                     }
 
@@ -484,7 +408,7 @@ namespace System.Data.DBAccess.Generic
             db.WriteTrace(TraceLevel.DEBUG, "Getting all nested populate data objects.");
             var allNestedPData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetPopulateData(drf, tuple.ColumnNames, t));
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType);
+            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData);
 
             if (db.IsMultiThreaded)
             {
@@ -499,25 +423,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         Object t = Activator.CreateInstance(modelType);
                         del(t, dr);
-                        //db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dr, thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
                         db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                         return t;
                     }).ToList();
@@ -542,25 +447,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         Object t = Activator.CreateInstance(modelType);
                         del(t, dr);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dr, thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
-                        //db.Populate(t, dr, data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         return t;
                     }).ToList();
                 }
@@ -581,25 +467,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         Object t = Activator.CreateInstance(modelType);
                         del(t, dataRows[i]);
-                        //db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dataRows[i], thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
                         db.PopulateDefaultModelValues(t, dVData, modelType, pData.ColUpperNames, data, allNestedDVData);
                         retList.Add(t);
                     }
@@ -628,25 +495,6 @@ namespace System.Data.DBAccess.Generic
                     {
                         Object t = Activator.CreateInstance(modelType);
                         del(t, dataRows[i]);
-                        foreach (var nest in data.NestedModelBaseFields)
-                        {
-                            //TO DO: this runs about 7% slower checking each time here
-                            //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                            //if the nested model object already exists
-                            //(if the parent object creates this nested object in the constructor)
-                            //don't create a new one...
-                            var thisType = nest.Value.FieldType;
-
-                            //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                            Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? t.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                            var thisData = db.ModelsData[thisType];
-
-                            var npData = allNestedPData[thisType];
-                            db.Populate(m, dataRows[i], thisData, thisType, npData.MappedCols, npData.ColUpperNames, npData.ColCount, npData.HasSetters, npData.PropertyTypes, npData.PropertyFormats, allNestedPData, npData.FDAIndexes);
-                            data.FastDynamicAccess.Set(t, nest.Key, m);
-                        }
-                        //db.Populate(t, dataRows[i], data, modelType, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
                         retList.Add(t);
                     }
 
