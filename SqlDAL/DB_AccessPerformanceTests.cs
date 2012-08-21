@@ -1276,11 +1276,11 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             return objs;
         }
 
-        private static Dictionary<Object, ExecuteReadQuickTuple> m_tuplesCache = new Dictionary<Object, ExecuteReadQuickTuple>();
+        private static Dictionary<String, ExecuteReadQuickTuple> m_tuplesCache = new Dictionary<String, ExecuteReadQuickTuple>();
         private static ExecuteReadQuickTuple ConvertObjectToExecuteReadTuple(Object input, int iterations)
         {
             ExecuteReadQuickTuple tuple;
-            if (!m_tuplesCache.TryGetValue(input, out tuple))
+            if (!m_tuplesCache.TryGetValue(String.Format("{0}{1}", input.GetType(), iterations), out tuple))
             {
                 var properties = input.GetType().GetProperties();
                 var obj = properties.Select(p => p.GetValue(input, null)).ToArray();
@@ -1290,7 +1290,7 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 for (int i = 0; i < iterations; i++)
                     objs.Add(obj);
 
-                m_tuplesCache.Add(input, new ExecuteReadQuickTuple
+                m_tuplesCache.Add(String.Format("{0}{1}", input.GetType(), iterations), new ExecuteReadQuickTuple
                 {
                     DataRows = objs,
                     ColumnNames = properties.Select(p => p.Name).ToList(),
@@ -1298,7 +1298,7 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 });
             }
 
-            return m_tuplesCache[input];
+            return m_tuplesCache[String.Format("{0}{1}", input.GetType(), iterations)];
         }
 
         private static TestCase GetTestCaseReturnValue(String name, long iterationsPerRun, long timesToRun, long totalFields, List<TimeSpan> times)
