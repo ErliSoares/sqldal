@@ -17,6 +17,7 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Data.DBAccess.Generic.Providers.SQL;
 using System.Linq;
+using System.Diagnostics;
 
 namespace System.Data.DBAccess.Generic.Benchmarking
 {
@@ -27,7 +28,7 @@ namespace System.Data.DBAccess.Generic.Benchmarking
         public Double TimeTaken { get; set; }
         public String ThousandsOfFieldsPerSecond { get; set; }
 
-        public Object [] ToObjectArray()
+        public Object[] ToObjectArray()
         {
             return new Object[]
             {
@@ -63,12 +64,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             var db = new SqlDBAccess();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.PopulateModelBaseEnumeration<T>(sampleData);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.PopulateModelBaseEnumeration<T>(sampleData);
+                }));
             }
 
             int fieldsInReturnType = input.GetType().GetProperties().Count();
@@ -81,12 +82,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             var db = new SqlDBAccess();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateScalarEnumeration<T>(sampleData);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateScalarEnumeration<T>(sampleData);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, 1, times);
@@ -101,12 +102,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             var db = new SqlDBAccess();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.CreateDataTableFromModelProperty(inputValues);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.CreateDataTableFromModelProperty(inputValues);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, ((IDBAccess)db).ModelsData[input.GetType()].AllNestedModelFields.Count, times);
@@ -129,12 +130,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -158,12 +159,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -189,12 +190,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -222,12 +223,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -257,12 +258,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -294,12 +295,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -333,12 +334,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -374,12 +375,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -417,12 +418,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -462,12 +463,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -509,12 +510,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -558,12 +559,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -609,12 +610,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -662,12 +663,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -717,12 +718,12 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = tables.Sum(t => t.ColumnNames.Count);
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(tables);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(tables);
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, fieldsInReturnTypes, times);
@@ -735,17 +736,16 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             var db = new SqlDBAccess();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
 
             for (int i = 0; i < timesToRun; i++)
             {
-                foreach (var rt in returnTypes)
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
                 {
-                    db.PopulateModelBaseEnumeration(sampleData, rt).OfType<T>().ToList();
-                }
-
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                    foreach (var rt in returnTypes)
+                    {
+                        db.PopulateModelBaseEnumeration(sampleData, rt).OfType<T>().ToList();
+                    }
+                }));
             }
 
             return GetTestCaseReturnValue(name, iterationsPerRun, timesToRun, returnTypes.Sum(rt => rt.GetProperties().Count()), times);
@@ -762,15 +762,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2>(tables);
-                tuple.SetRelationships<T1, T2, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2>(tables);
+                    tuple.SetRelationships<T1, T2, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -786,15 +786,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3>(tables);
-                tuple.SetRelationships<T1, T2, T3, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3>(tables);
+                    tuple.SetRelationships<T1, T2, T3, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -811,15 +811,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -837,15 +837,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -867,12 +867,13 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, Object, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -892,15 +893,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, Object, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -921,15 +922,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, Object, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -951,15 +952,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, Object, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, Object, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -982,15 +983,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, Object, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, Object, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1014,15 +1015,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Object, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, Object, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1047,15 +1048,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, Object, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, Object, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1081,15 +1082,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Object, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, Object, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1116,15 +1117,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, Object, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, Object, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1152,15 +1153,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, Object>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, Object>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1189,15 +1190,15 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(tables);
-                tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(relationships);
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                {
+                    db.EnsureRelationshipsHaveIndexes(relationships);
+                    var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                    var tuple = db.GenerateModelEnumerations<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(tables);
+                    tuple.SetRelationships<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, T12, T13, T14, T15, T16>(relationships);
+                }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
@@ -1210,22 +1211,30 @@ namespace System.Data.DBAccess.Generic.Benchmarking
             int fieldsInReturnTypes = (int)tables.Select((t, i) => t.ColumnNames.Count * Math.Pow(childrenPerParent, i + 1)).Sum();
 
             List<TimeSpan> times = new List<TimeSpan>();
-            var start = DateTime.Now;
 
             for (int i = 0; i < timesToRun; i++)
             {
-                db.EnsureRelationshipsHaveIndexes(relationships);
-                var parents = db.GetParentPropertyLists(tables.Count, relationships);
-                var relTables = tables.Select((t, k) => db.PopulateModelBaseEnumeration(t, returnTypes[k], parents[k])).ToList();
-                db.SetRelationships(relationships, relTables);
-
-                times.Add(DateTime.Now - start);
-                start = DateTime.Now;
+                times.Add(PerformanceTests.RunAndTimeAction(() =>
+                    {
+                        db.EnsureRelationshipsHaveIndexes(relationships);
+                        var parents = db.GetParentPropertyLists(tables.Count, relationships);
+                        var relTables = tables.Select((t, k) => db.PopulateModelBaseEnumeration(t, returnTypes[k], parents[k])).ToList();
+                        db.SetRelationships(relationships, relTables);
+                    }));
             }
 
             return GetTestCaseReturnValue(name, 1, timesToRun, fieldsInReturnTypes, times);
         }
         #endregion
+
+        private static TimeSpan RunAndTimeAction(Action a)
+        {
+            var s = new Stopwatch();
+            s.Start();
+            a();
+            s.Stop();
+            return s.Elapsed;
+        }
 
         public static List<Object[]> ConvertObjectToDataRows(Object input, int iterations)
         {
