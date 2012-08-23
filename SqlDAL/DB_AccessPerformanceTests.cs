@@ -34,7 +34,7 @@ namespace System.Data.DBAccess.Generic.Benchmarking
                 this.Name,
                 int.Parse((this.TotalFieldsPopulated ?? "0").Replace(",", "")),
                 this.TimeTaken,
-                int.Parse((this.ThousandsOfFieldsPerSecond ?? "0").Replace(",", ""))
+                int.Parse((this.ThousandsOfFieldsPerSecond == "Infinity" ? "0" : this.ThousandsOfFieldsPerSecond ?? "0").Replace(",", ""))
             };
         }
 

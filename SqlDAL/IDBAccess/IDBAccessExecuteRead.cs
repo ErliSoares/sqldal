@@ -272,7 +272,7 @@ namespace System.Data.DBAccess.Generic
             int numItems = dataRows.Count;
             List<T> retList = new List<T>(numItems);
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData, true);
+            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, data, allNestedPData, db.ModelsData, typeof(T), true);
 
             if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
@@ -356,7 +356,7 @@ namespace System.Data.DBAccess.Generic
             db.WriteTrace(TraceLevel.DEBUG, "Getting all nested populate data objects.");
             var allNestedPData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetPopulateData(drf, tuple.ColumnNames, t));
 
-            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, modelType, data, allNestedPData, db.ModelsData, false);
+            var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, data, allNestedPData, db.ModelsData, modelType, false);
 
             int numItems = dataRows.Count;
             List<Object> retList = new List<Object>(numItems);

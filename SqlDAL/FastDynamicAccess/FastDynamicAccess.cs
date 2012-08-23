@@ -291,39 +291,54 @@ namespace System.Data.DBAccess.Generic
         /// <param name="propertyNames">The mapped property/column names.  Properties which do not map should be null.</param>
         /// <param name="stringFormats">The string formats to apply to the properties.</param>
         /// <param name="propertyTypes">The type of each property.</param>
-        /// <param name="modelType">This model type.</param>
         /// <param name="data">The ModelData object for this model type.</param>
         /// <param name="allNestedPData">All nested PopulateData objects.</param>
         /// <param name="modelsData">All ModelData objects.</param>
+        /// <param name="modelType">The model type.</param>
         /// <returns>A population delegate.</returns>
-        internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, Type modelType, ModelData data, Dictionary<Type, PopulateData> allNestedPData, Dictionary<Type, ModelData> modelsData, Boolean isGeneric)
+        internal static GetModelPopulateMethodDelegate GetModelPopulateMethod(List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, ModelData data, Dictionary<Type, PopulateData> allNestedPData, Dictionary<Type, ModelData> modelsData, Type modelType, Boolean isGeneric)
         {
-            var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.Assembly.FullName + modelType.FullName).GenerateHash().Replace("-", ""));
+            var methodName = String.Format("Populate_{0}", (String.Join("", propertyNames.Select(p => p ?? "nullProperty")) + modelType.Assembly.FullName + modelType.FullName + isGeneric.ToString()).GenerateHash().Replace("-", ""));
             GetModelPopulateMethodDelegate gmpmd;
 
             if (!s_ModelPopulateCache.TryGetValue(methodName, out gmpmd))
             {
                 int numOfModels = 1;
 
-                //var nestedModelIndexes = new Dictionary<Type, int>();
+                //if it's not generic we need to be working with an object list
+                var listType = typeof(List<>).MakeGenericType(new Type [] { isGeneric ? modelType : typeof(Object) });
 
                 var meth = new DynamicMethod(methodName, typeof(void), new Type[] { modelType, typeof(Object), typeof(List<Object[]>), typeof(int) }, true);
                 var il = meth.GetILGenerator();
 
-                il.DeclareLocal(typeof(int)); //int i
-                il.DeclareLocal(typeof(Object)); // stores object from dr[]
-
                 var exitLoopLabel = il.DefineLabel();
                 var beginLoopLabel = il.DefineLabel();
-                
+
                 il.Emit(OpCodes.Ldc_I4_0);
                 il.Emit(OpCodes.Ldarg_3); //num of elements
                 //if no elements to populate, quit
                 il.Emit(OpCodes.Bge, exitLoopLabel);
 
+                il.DeclareLocal(typeof(int)); //int i
+                il.DeclareLocal(typeof(Object)); // stores object from dr[]
+                il.DeclareLocal((isGeneric ? modelType : typeof(Object)).MakeArrayType()); //the _items field of the return list.  will be objects if not generic
+                il.DeclareLocal(typeof(Object[][])); //the _items field of the datarows
+
                 //int i = 0;
                 il.Emit(OpCodes.Ldc_I4_0);
                 il.Emit(OpCodes.Stloc_0);
+
+                //get the return list's array
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Castclass, listType);
+                il.Emit(OpCodes.Ldfld, listType.GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.Emit(OpCodes.Stloc_2);
+
+                //get the dataRows list's array
+                il.Emit(OpCodes.Ldarg_2);
+                il.Emit(OpCodes.Castclass, typeof(List<Object[]>));
+                il.Emit(OpCodes.Ldfld, typeof(List<Object[]>).GetField("_items", BindingFlags.NonPublic | BindingFlags.Instance));
+                il.Emit(OpCodes.Stloc_3);
 
                 il.MarkLabel(beginLoopLabel);
                 //do parent model
@@ -336,13 +351,11 @@ namespace System.Data.DBAccess.Generic
                     FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref numOfModels, modelsData, nest.Key, modelType, !data.NestedTypesInstantiatedInConstructor[thisType]);
                 }
 
-                var listType = isGeneric ? typeof(List<>).MakeGenericType(new Type[] { modelType }) : typeof(List<>).MakeGenericType(new Type[] { typeof(Object) });
-
                 //add it to the list
-                il.Emit(OpCodes.Ldarg_1); // List<T> that was passed in
-                il.Emit(OpCodes.Castclass, listType);
-                il.Emit(OpCodes.Ldloc_2); // the model that we populated
-                il.Emit(OpCodes.Callvirt, listType.GetMethod("Add"));
+                il.Emit(OpCodes.Ldloc_2); //the return list array
+                il.Emit(OpCodes.Ldloc_0); //int i
+                FastDynamicAccess.Ldloc_i(il, 2); // the model that we populated
+                il.Emit(OpCodes.Stelem_Ref);
 
                 il.Emit(OpCodes.Ldloc_0);
                 il.Emit(OpCodes.Ldc_I4_1);
@@ -353,6 +366,17 @@ namespace System.Data.DBAccess.Generic
                 il.Emit(OpCodes.Blt, beginLoopLabel);
 
                 il.MarkLabel(exitLoopLabel);
+
+                //set size and version of list
+                il.Emit(OpCodes.Ldarg_1); // List<T> that was passed in
+                il.Emit(OpCodes.Castclass, listType);
+                il.Emit(OpCodes.Ldarg_3);
+                il.Emit(OpCodes.Stfld, listType.GetField("_size", BindingFlags.NonPublic | BindingFlags.Instance));
+
+                il.Emit(OpCodes.Ldarg_1); // List<T> that was passed in
+                il.Emit(OpCodes.Castclass, listType);
+                il.Emit(OpCodes.Ldarg_3);
+                il.Emit(OpCodes.Stfld, listType.GetField("_version", BindingFlags.NonPublic | BindingFlags.Instance));
 
                 il.Emit(OpCodes.Ret);
 
@@ -369,9 +393,9 @@ namespace System.Data.DBAccess.Generic
         /// <param name="il">The IL Generator</param>
         private static void GetObjectArrayFromList(ILGenerator il)
         {
-            il.Emit(OpCodes.Ldarg_2); //List<Object[]>
+            il.Emit(OpCodes.Ldloc_3); //Object[][]
             il.Emit(OpCodes.Ldloc_0); //int i
-            il.Emit(OpCodes.Callvirt, typeof(List<Object[]>).GetMethod("get_Item"));
+            il.Emit(OpCodes.Ldelem_Ref);
         }
 
         /// <summary>
@@ -381,7 +405,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="i">The index.</param>
         private static void Stloc_i(ILGenerator il, int i)
         {
-            switch (i)
+            switch (i + 2)
             {
                 case 1:
                     il.Emit(OpCodes.Stloc_1);
@@ -393,7 +417,7 @@ namespace System.Data.DBAccess.Generic
                     il.Emit(OpCodes.Stloc_3);
                     break;
                 default:
-                    il.Emit(OpCodes.Stloc_S, i);
+                    il.Emit(OpCodes.Stloc_S, i + 2);
                     break;
             }
         }
@@ -405,7 +429,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="i">The index.</param>
         private static void Ldloc_i(ILGenerator il, int i)
         {
-            switch (i)
+            switch (i + 2)
             {
                 case 1:
                     il.Emit(OpCodes.Ldloc_1);
@@ -417,9 +441,20 @@ namespace System.Data.DBAccess.Generic
                     il.Emit(OpCodes.Ldloc_3);
                     break;
                 default:
-                    il.Emit(OpCodes.Ldloc_S, i);
+                    il.Emit(OpCodes.Ldloc_S, i + 2);
                     break;
             }
+        }
+
+        private static void LoadArrayElement(ILGenerator il, int i)
+        {
+            //load the array index we want to read from the Object[] dr
+            if (i <= 8)
+                il.Emit(GetLDC_I4_Code(i));
+            else
+                il.Emit(OpCodes.Ldc_I4_S, i);
+
+            il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
         }
 
         /// <summary>
@@ -479,8 +514,6 @@ namespace System.Data.DBAccess.Generic
 
             il.DeclareLocal(modelType); // stores model reference
 
-            //if (thisModelNum == 1)
-            //    il.Emit(OpCodes.Ldarg_1); //push class instance onto stack
             if (thisModelNum == 1 || instantiateNest) //if it's the top model or a nested class that needs instantiation, create it
             {
                 il.Emit(OpCodes.Newobj, modelType.GetConstructor(new Type[] { }));
@@ -524,36 +557,15 @@ namespace System.Data.DBAccess.Generic
 
                 il.BeginExceptionBlock();
                 FastDynamicAccess.Ldloc_i(il, thisModelNum + 1);
-                /*switch (thisModelNum)
-                {
-                    case 1:
-                        il.Emit(OpCodes.Ldloc_1); //store it into the local variable
-                        break;
-                    case 2:
-                        il.Emit(OpCodes.Ldloc_2);
-                        break;
-                    case 3:
-                        il.Emit(OpCodes.Ldloc_3);
-                        break;
-                    default:
-                        il.Emit(OpCodes.Ldloc_S, thisModelNum);
-                        break;
-                }*/
 
                 if (stringFormats[i] != null)
                 {
                     il.Emit(OpCodes.Ldstr, stringFormats[i]); //load string format string onto stack if needed
                 }
-                GetObjectArrayFromList(il);
-                //il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+                GetObjectArrayFromList(il); // get the current data row to populate
 
                 //load the array index we want to read from the Object[] dr
-                if (i <= 8)
-                    il.Emit(GetLDC_I4_Code(i));
-                else
-                    il.Emit(OpCodes.Ldc_I4_S, i);
-
-                il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+                FastDynamicAccess.LoadArrayElement(il, i);
 
                 var pType = propertyTypes[i];
 
@@ -621,16 +633,10 @@ namespace System.Data.DBAccess.Generic
                 }
                 else
                 {
-                    GetObjectArrayFromList(il);
-                    //il.Emit(OpCodes.Ldarg_2); //push parameter Object[] dr onto stack
+                    GetObjectArrayFromList(il); //get current datarowwe were trying to populate
 
                     //load the array index we want to read from the Object[] dr
-                    if (i <= 8)
-                        il.Emit(GetLDC_I4_Code(i));
-                    else
-                        il.Emit(OpCodes.Ldc_I4_S, i);
-
-                    il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+                    FastDynamicAccess.LoadArrayElement(il, i);
                 }
 
                 il.Emit(OpCodes.Callvirt, typeof(Object).GetMethod("GetType"));

@@ -691,65 +691,6 @@ namespace System.Data.DBAccess.Generic
         }
 
         /// <summary>
-        /// Populates a model with a given data row.
-        /// </summary>
-        /// <param name="model">The model to populate.</param>
-        /// <param name="dr">The data row containg the values to populate.</param>
-        /// <param name="data">The ModelData object associated with the model type.</param>
-        /// <param name="modelType">The model type.</param>
-        /// <param name="mappedCols">The model property names that correspond to each column.</param>
-        /// <param name="colUpperNames">The column names capitalized.</param>
-        /// <param name="colCount">The number of columns.</param>
-        /// <param name="hasSetters">The HasSetters list for the model property names.</param>
-        /// <param name="propertyTypes">The types associated with the property names.</param>
-        /// <param name="propertyFormats">The write String.Format string format strings.</param>
-        /// <param name="allNestedPData">All nested PopulateData objects.</param>
-        /// <param name="fdaIndexes">List of property indexes to use for setting via the FDA object.</param>
-        internal static void Populate(this IDBAccess db, Object model, DataRow dr, ModelData data, Type modelType, List<String> mappedCols, List<String> colUpperNames, int colCount, List<Boolean> hasSetters, List<Type> propertyTypes, List<String> propertyFormats, Dictionary<Type, PopulateData> allNestedPData, List<int> fdaIndexes)
-        {
-            db.Populate(model, dr.ItemArray, data, modelType, mappedCols, colUpperNames, colCount, hasSetters, propertyTypes, propertyFormats, allNestedPData, fdaIndexes);
-        }
-
-        /// <summary>
-        /// Populates a model with a given data row.
-        /// </summary>
-        /// <param name="model">The model to populate.</param>
-        /// <param name="dr">The data row containg the values to populate.</param>
-        /// <param name="data">The ModelData object associated with the model type.</param>
-        /// <param name="modelType">The model type.</param>
-        /// <param name="mappedCols">The model property names that correspond to each column.</param>
-        /// <param name="colUpperNames">The column names capitalized.</param>
-        /// <param name="colCount">The number of columns.</param>
-        /// <param name="hasSetters">The HasSetters list for the model property names.</param>
-        /// <param name="propertyTypes">The types associated with the property names.</param>
-        /// <param name="propertyFormats">The write String.Format string format strings.</param>
-        /// <param name="allNestedPData">All nested PopulateData objects.</param>
-        /// <param name="fdaIndexes">List of property indexes to use for setting via the FDA object.</param>
-        internal static void Populate(this IDBAccess db, Object model, Object[] dr, ModelData data, Type modelType, List<String> mappedCols, List<String> colUpperNames, int colCount, List<Boolean> hasSetters, List<Type> propertyTypes, List<String> propertyFormats, Dictionary<Type, PopulateData> allNestedPData, List<int> fdaIndexes)
-        {
-            FastDynamicAccess.GetModelPopulateMethod(mappedCols, propertyFormats, propertyTypes, model.GetType(), data, allNestedPData, db.ModelsData, false)(new List<Object> { model }, new List<Object[]> { dr }, 1);
-
-            /*foreach (var nest in data.NestedModelBaseFields)
-            {
-                //TO DO: this runs about 7% slower checking each time here
-                //this is something that would need to be cached in ModelData... which nested types of a model are constructed on instantiation...
-
-                //if the nested model object already exists
-                //(if the parent object creates this nested object in the constructor)
-                //don't create a new one...
-                var thisType = nest.Value.FieldType;
-
-                //if the nested type is instantiated in the constructor of the model parameter, then use the already instantiated value
-                Object m = data.NestedTypesInstantiatedInConstructor[nest.Value.FieldType] ? model.GetValue(nest.Key) : Activator.CreateInstance(thisType);
-                var thisData = db.ModelsData[thisType];
-
-                var pData = allNestedPData[thisType];
-                db.Populate(m, dr, thisData, thisType, pData.MappedCols, colUpperNames, colCount, hasSetters, propertyTypes, propertyFormats, allNestedPData, pData.FDAIndexes);
-                data.FastDynamicAccess.Set(model, nest.Key, m);
-            }*/
-        }
-
-        /// <summary>
         /// Gets property names and their values of model properties that will take on their default value as a result of the query.
         /// </summary>
         /// <param name="data">The ModelData object associated with the model type.</param>

@@ -372,51 +372,66 @@ namespace UnitTests
         [TestMethod()]
         public void PopulateTest()
         {
-            DateTime now = DateTime.Now;
-            ClassWithNullableValueType target = new ClassWithNullableValueType();
-            Type type = typeof(ClassWithNullableValueType);
-            DataTable dt = new DataTable();
-            dt.Columns.Add("NonNullableValueType", typeof(int));
-            dt.Columns.Add("InputParameter", typeof(int));
-            dt.Columns.Add("Time", typeof(DateTime));
-            dt.Rows.Add(5, 6, now);
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], typeof(ClassWithNullableValueType));
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dt.Rows[0], ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+            db.ValidateForDAL(new ClassWithNullableValueType());
 
-            Assert.AreEqual(target.NonNullableValueType, 5);
-            Assert.AreEqual(target.InputParameter, 6);
-            Assert.AreEqual(target.Time, String.Format("{0:MM/dd/yyyy hh:mm:ss}", now));
+            DateTime now = DateTime.Now;
+
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "NonNullableValueType",
+                    "InputParameter",
+                    "Time"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int),
+                    typeof(int),
+                    typeof(DateTime)
+                },
+                DataRows = new List<Object[]> { new Object [] { 5, 6, now } }
+            };
+
+            var target = db.PopulateModelBaseEnumeration<ClassWithNullableValueType>(tuple)[0];
+
+            Assert.AreEqual<int>(target.NonNullableValueType, 5);
+            Assert.AreEqual<int>(target.InputParameter, 6);
+            Assert.AreEqual<String>(target.Time, String.Format("{0:MM/dd/yyyy hh:mm:ss}", now));
         }
 
         [TestMethod()]
         public void PopulateDALDefaultValuesTest()
         {
             DateTime now = DateTime.Now;
-            ClassWithNullableValueType target = new ClassWithNullableValueType();
-            Type type = typeof(ClassWithNullableValueType);
-            DataTable dt = new DataTable();
-            dt.Columns.Add("NonNullableValueType", typeof(int));
-            dt.Columns.Add("InputParameter", typeof(int));
-            dt.Columns.Add("Time", typeof(DateTime));
-            dt.Rows.Add(5, 6, now);
+
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var data = ((IDBAccess)db).ModelsData[typeof(ClassWithNullableValueType)];
-            var pData = db.GetPopulateData(dt.Rows[0], typeof(ClassWithNullableValueType));
-            var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            var allNestedDVData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(((IDBAccess)db).ModelsData[t], pData.ColUpperNames));
+            db.PopulateDefaultValues = true;
 
-            db.Populate(target, dt.Rows[0], data, type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-            db.PopulateDefaultModelValues(target, dVData, type, pData.ColUpperNames, data, allNestedDVData);
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "NonNullableValueType",
+                    "InputParameter",
+                    "Time"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int),
+                    typeof(int),
+                    typeof(DateTime)
+                },
+                DataRows = new List<Object[]> { new Object [] { 5, 6, now } }
+            };
 
-            Assert.AreEqual(target.NullableValueType, 10);
-            Assert.AreEqual(target.NonNullableValueType, 5);
-            Assert.AreEqual(target.InputParameter, 6);
-            Assert.AreEqual(target.Time, String.Format("{0:MM/dd/yyyy hh:mm:ss}", now));
+            var target = db.PopulateModelBaseEnumeration<ClassWithNullableValueType>(tuple)[0];
+
+            Assert.AreEqual<int?>(10, target.NullableValueType);
+            Assert.AreEqual<int>(5, target.NonNullableValueType);
+            Assert.AreEqual<int>(6, target.InputParameter);
+            Assert.AreEqual<String>(String.Format("{0:MM/dd/yyyy hh:mm:ss}", now), target.Time);
         }
 
         public class DALDefaultValueWithDifferentSprocName
@@ -432,23 +447,26 @@ namespace UnitTests
         public void PopulateDALDefaultValuesTest2()
         {
             DateTime now = DateTime.Now;
-            var target = new DALDefaultValueWithDifferentSprocName();
-            Type type = typeof(DALDefaultValueWithDifferentSprocName);
-            DataTable dt = new DataTable();
-            dt.Columns.Add("ID", typeof(int));
-            dt.Rows.Add(5);
+
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "ID"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int)
+                },
+                DataRows = new List<Object[]> { new Object [] { 5 } }
+            };
+
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var data = ((IDBAccess)db).ModelsData[typeof(DALDefaultValueWithDifferentSprocName)];
-            var pData = db.GetPopulateData(dt.Rows[0], typeof(DALDefaultValueWithDifferentSprocName));
-            var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            var allNestedDVData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(((IDBAccess)db).ModelsData[t], pData.ColUpperNames));
+            db.PopulateDefaultValues = true;
 
-            db.Populate(target, dt.Rows[0], data, type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
-            db.PopulateDefaultModelValues(target, dVData, type, pData.ColUpperNames, data, allNestedDVData);
+            var target = db.PopulateModelBaseEnumeration<DALDefaultValueWithDifferentSprocName>(tuple)[0];
 
-            Assert.AreEqual(target.Name, "Brian");
+            Assert.AreEqual<String>(target.Name, "Brian");
         }
 
         public class ModelWithNestedModelsPopulate
@@ -487,17 +505,6 @@ namespace UnitTests
         [TestMethod()]
         public void NestedModelBasePopulateTest()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("String1", typeof(String));
-            dt.Columns.Add("Int1", typeof(int));
-            dt.Columns.Add("GreetingString", typeof(String));
-            dt.Columns.Add("InternalString", typeof(String));
-            dt.Columns.Add("InternalInt", typeof(int));
-            dt.Columns.Add("NewString", typeof(String));
-            dt.Columns.Add("NewInt", typeof(int));
-            dt.Columns.Add("NewString2", typeof(String));
-            dt.Columns.Add("NewInt2", typeof(int));
-
             String String1 = "This is String1";
             int Int1 = 1;
             String GreetingString = "This is GreetingString";
@@ -507,26 +514,49 @@ namespace UnitTests
             int NewInt = -1;
             String NewString2 = "This is NewString2";
             int NewInt2 = -2;
-
-            dt.Rows.Add(String1, Int1, GreetingString, InternalString, InternalInt, NewString, NewInt, NewString2, NewInt2);
-            ModelWithNestedModelsPopulate target = new ModelWithNestedModelsPopulate();
-            Type type = typeof(ModelWithNestedModelsPopulate);
+            
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "String1",
+                    "Int1",
+                    "GreetingString",
+                    "InternalString",
+                    "InternalInt",
+                    "NewString",
+                    "NewInt",
+                    "NewString2",
+                    "NewInt2"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(String),
+                    typeof(int),
+                    typeof(String),
+                    typeof(String),
+                    typeof(int),
+                    typeof(String),
+                    typeof(int),
+                    typeof(String),
+                    typeof(int)
+                },
+                DataRows = new List<Object[]> { new Object [] { String1, Int1, GreetingString, InternalString, InternalInt, NewString, NewInt, NewString2, NewInt2 } }
+            };
 
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], type);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dt.Rows[0], ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
 
-            Assert.AreEqual(String1, target.String1);
-            Assert.AreEqual(Int1, target.Int1);
-            Assert.AreEqual(GreetingString, target.Nest1.GreetingString);
-            Assert.AreEqual(InternalString, target.Nest1.Nest2.InternalString);
-            Assert.AreEqual(InternalInt, target.Nest1.Nest2.InternalInt);
-            Assert.AreEqual(NewString, target.Nest1.Nest2.Nest3.NewString);
-            Assert.AreEqual(NewInt, target.Nest1.Nest2.Nest3.NewInt);
-            Assert.AreEqual(NewString2, target.Nest1.Nest2.Nest3.Nest4.NewString2);
-            Assert.AreEqual(NewInt2, target.Nest1.Nest2.Nest3.Nest4.NewInt2);
+            var target = db.PopulateModelBaseEnumeration<ModelWithNestedModelsPopulate>(tuple)[0];
+
+            Assert.AreEqual<String>(String1, target.String1);
+            Assert.AreEqual<int>(Int1, target.Int1);
+            Assert.AreEqual<String>(GreetingString, target.Nest1.GreetingString);
+            Assert.AreEqual<String>(InternalString, target.Nest1.Nest2.InternalString);
+            Assert.AreEqual<int>(InternalInt, target.Nest1.Nest2.InternalInt);
+            Assert.AreEqual<String>(NewString, target.Nest1.Nest2.Nest3.NewString);
+            Assert.AreEqual<int>(NewInt, target.Nest1.Nest2.Nest3.NewInt);
+            Assert.AreEqual<String>(NewString2, target.Nest1.Nest2.Nest3.Nest4.NewString2);
+            Assert.AreEqual<int>(NewInt2, target.Nest1.Nest2.Nest3.Nest4.NewInt2);
         }
 
         public class NestedModelCustomConstructor
@@ -587,53 +617,67 @@ namespace UnitTests
         [TestMethod()]
         public void NestedModelBasePopulateIgnoreOneTest()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("String1", typeof(String));
-            dt.Columns.Add("Int1", typeof(int));
-            dt.Columns.Add("GreetingString", typeof(String));
-            dt.Columns.Add("HelloWorldString", typeof(String));
-
             String String1 = "This is String1";
             int Int1 = 1;
             String GreetingString = "This is GreetingString";
             String HelloWorldString = "This is HelloWorldString";
-
-            dt.Rows.Add(String1, Int1, GreetingString, HelloWorldString);
-            ModelWithNestedModelsPopulateIgnoreOne target = new ModelWithNestedModelsPopulateIgnoreOne();
-            Type type = typeof(ModelWithNestedModelsPopulateIgnoreOne);
+            
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "String1",
+                    "Int1",
+                    "GreetingString",
+                    "HelloWorldString"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(String),
+                    typeof(int),
+                    typeof(String),
+                    typeof(String)
+                },
+                DataRows = new List<Object[]> { new Object[] { String1, Int1, GreetingString, HelloWorldString } }
+            };
 
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], type);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dt.Rows[0], ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
 
-            Assert.AreEqual(String1, target.String1);
-            Assert.AreEqual(Int1, target.Int1);
-            Assert.AreEqual(GreetingString, target.Nest1.GreetingString);
-            Assert.AreEqual(null, target.Nest1.HelloWorldString);
+            var target = db.PopulateModelBaseEnumeration<ModelWithNestedModelsPopulateIgnoreOne>(tuple)[0];
+
+            Assert.AreEqual<String>(String1, target.String1);
+            Assert.AreEqual<int>(Int1, target.Int1);
+            Assert.AreEqual<String>(GreetingString, target.Nest1.GreetingString);
+            Assert.AreEqual<String>(null, target.Nest1.HelloWorldString);
         }
 
         [TestMethod()]
         public void ModelWithWriteOnlyPropertiesPopulateTest()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("ID", typeof(int));
-            dt.Columns.Add("WriteOnlyString", typeof(String));
-            dt.Columns.Add("Amount", typeof(Decimal));
-
             int ID = 5;
             String WriteOnlyString = "Can't read me";
             Decimal Amount = 56.78m;
 
-            var dr = dt.Rows.Add(ID, WriteOnlyString, Amount);
-            var target = new ModelWithWriteOnlyParameters();
-            Type type = typeof(ModelWithWriteOnlyParameters);
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], type);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dr, ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "ID",
+                    "WriteOnlyString",
+                    "Amount"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int),
+                    typeof(String),
+                    typeof(Decimal)
+                },
+                DataRows = new List<Object[]> { new Object[] { ID, WriteOnlyString, Amount } }
+            };
+
+            var target = db.PopulateModelBaseEnumeration<ModelWithWriteOnlyParameters>(tuple)[0];
 
             Assert.AreEqual(ID, target.ID);
             Assert.AreEqual(WriteOnlyString, target.writeOnlyString);
@@ -651,23 +695,30 @@ namespace UnitTests
         [TestMethod()]
         public void ModelWithReadOnlyPropertiesPopulateTest_Pass1()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("ID", typeof(int));
-            dt.Columns.Add("ReadOnlyString", typeof(String));
-            dt.Columns.Add("Amount", typeof(Decimal));
-
             int ID = 5;
             String ReadOnlyString = "Can't read me";
             Decimal Amount = 56.78m;
 
-            var dr = dt.Rows.Add(ID, ReadOnlyString, Amount);
-            var target = new ModelWithReadOnlyProperties();
-            Type type = typeof(ModelWithReadOnlyProperties);
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], type);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dr, ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "ID",
+                    "ReadOnlyString",
+                    "Amount"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int),
+                    typeof(String),
+                    typeof(Decimal)
+                },
+                DataRows = new List<Object[]> { new Object[] { ID, ReadOnlyString, Amount } }
+            };
+
+            var target = db.PopulateModelBaseEnumeration<ModelWithReadOnlyProperties>(tuple)[0];
         }
 
         public class ModelWithReadOnlyPropertiesNotInput
@@ -682,23 +733,30 @@ namespace UnitTests
         [TestMethod()]
         public void ModelWithReadOnlyPropertiesPopulateTest_Pass2()
         {
-            DataTable dt = new DataTable();
-            dt.Columns.Add("ID", typeof(int));
-            dt.Columns.Add("ReadOnlyString", typeof(String));
-            dt.Columns.Add("Amount", typeof(Decimal));
-
             int ID = 5;
-            String ReadOnlyString = "Can't write me";
+            String ReadOnlyString = "Can't read me";
             Decimal Amount = 56.78m;
 
-            var dr = dt.Rows.Add(ID, ReadOnlyString, Amount);
-            var target = new ModelWithReadOnlyPropertiesNotInput();
-            Type type = typeof(ModelWithReadOnlyPropertiesNotInput);
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], type);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dr, ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "ID",
+                    "ReadOnlyString",
+                    "Amount"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int),
+                    typeof(String),
+                    typeof(Decimal)
+                },
+                DataRows = new List<Object[]> { new Object[] { ID, ReadOnlyString, Amount } }
+            };
+
+            var target = db.PopulateModelBaseEnumeration<ModelWithReadOnlyPropertiesNotInput>(tuple)[0];
         }
         #endregion
 
@@ -1146,18 +1204,26 @@ namespace UnitTests
         [TestMethod()]
         public void SetPropertyInNestedModelWithCustomSetter_CustomSetterIntTimesTwo_Test()
         {
-            var target = new NestedModelWithCustomSetter();
-            Type type = typeof(NestedModelWithCustomSetter);
-
             DataTable dt = new DataTable();
             dt.Columns.Add("Test", typeof(int));
             dt.Rows.Add(5);
 
             var db = new SqlDBAccess();
-            db.ValidateForDAL(target);
-            var pData = db.GetPopulateData(dt.Rows[0], type);
-            var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
-            db.Populate(target, dt.Rows[0], ((IDBAccess)db).ModelsData[type], type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String>
+                {
+                    "Test"
+                },
+                ColumnTypes = new List<Type>
+                {
+                    typeof(int)
+                },
+                DataRows = new List<Object[]> { new Object[] { 5 } }
+            };
+
+            var target = db.PopulateModelBaseEnumeration<NestedModelWithCustomSetter>(tuple)[0];
 
             Assert.AreEqual<int>(10, target.TheModel.Test);
         }
@@ -1643,7 +1709,7 @@ namespace UnitTests
             var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
             var allNestedDVData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(((IDBAccess)db).ModelsData[t], pData.ColUpperNames));
 
-            db.Populate(target, row, data, type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+            //db.Populate(target, row, data, type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
             db.PopulateDefaultModelValues(target, dVData, type, pData.ColUpperNames, data, allNestedDVData);
 
             Assert.AreEqual(5, target.DefaultInt);
@@ -1668,7 +1734,7 @@ namespace UnitTests
             var allNestedPData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetPopulateData(dt.Rows[0], t));
             var allNestedDVData = db.GetAllNestedTypes(type).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(((IDBAccess)db).ModelsData[t], pData.ColUpperNames));
 
-            db.Populate(target, row, data, type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
+            //db.Populate(target, row, data, type, pData.MappedCols, pData.ColUpperNames, pData.ColCount, pData.HasSetters, pData.PropertyTypes, pData.PropertyFormats, allNestedPData, pData.FDAIndexes);
             db.PopulateDefaultModelValues(target, dVData, type, pData.ColUpperNames, data, allNestedDVData);
 
             Assert.AreEqual("Hello World", target.Nest.HelloWorld);
