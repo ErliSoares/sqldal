@@ -319,8 +319,10 @@ namespace System.Data.DBAccess.Generic
                     //load the array index we want to read from the Object[] dr
                     if (fieldIndex <= 8)
                         dalPopulateIL.Emit(GetLDC_I4_Code(fieldIndex));
-                    else
+                    else if (fieldIndex <= 127)
                         dalPopulateIL.Emit(OpCodes.Ldc_I4_S, fieldIndex);
+                    else
+                        dalPopulateIL.Emit(OpCodes.Ldc_I4, fieldIndex);
                     dalPopulateIL.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
                     dalPopulateIL.EmitCall(OpCodes.Call, convertToTMethod.MakeGenericMethod(p.Value), null); //call ConvertToT method.  use MakeGenericMethod to get the generic version of this method which accepts the type we need
                     dalPopulateIL.Emit(OpCodes.Stfld, classFields[fieldIndex++]); //set the field
