@@ -369,9 +369,10 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
 
             var ret = parameters.SelectMany(p => this.PrepareSingleParameter(data, input, prefixDirection, p.Key, p.Value, inputPrefix, outputPrefix)).ToList();
 
-            this.WriteTrace(TraceLevel.INFORMATION, "IDbDataParameter values:{0}{1}",
+            this.WriteTrace(TraceLevel.INFORMATION, "{2} values:{0}{1}",
                                    Environment.NewLine,
-                                   String.Join(Environment.NewLine, ret.Select(p => String.Format("{0}: {1}", p.ParameterName, p.Value))));
+                                   String.Join(Environment.NewLine, ret.Select(p => String.Format("{0}: {1}", p.ParameterName, p.Value))),
+                                   typeof(TParameter).Name);
 
             return ret;
         }
@@ -531,7 +532,10 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
                 finally
                 {
                     if (useDefault && this.Transaction == null)
+                    {
                         this.Connection.Close();
+                        this.Connection = null;
+                    }   
                 }
             }
         }
