@@ -118,7 +118,7 @@ ORDER BY c.column_id"; // 0 is db name // 1 is table name
 }}",
                 table.Name,
                 interfaces,
-                String.Join(Environment.NewLine, table.Columns.Select(c => String.Format(@"    public {0} {1} {{ get; set; }}", c.Type, c.Name))),
+                String.Join(Environment.NewLine, table.Columns.Select(c => String.Format(@"    public {0} {1} {{ get; set; }}", c.Type, c.Name.Replace(" ", "")))),
                 chkIQuickPopulate.IsChecked == true ? GetIQuickPopulateFunction(table.Columns) : "",
                 chkIQuickRead.IsChecked == true ? GetIQuickReadFunction(table.Columns) : "");
 
@@ -130,7 +130,7 @@ ORDER BY c.column_id"; // 0 is db name // 1 is table name
             return String.Format(@"{0}{0}    public void DALPopulate(Object[] dr, Dictionary<String, int> indexes)
     {{
 {1}
-    }}", Environment.NewLine, String.Join(Environment.NewLine, columns.Select(c => String.Format("        this.{0} = dr[indexes[\"{0}\"]].CastToT<{1}>();", c.Name, c.Type))));
+    }}", Environment.NewLine, String.Join(Environment.NewLine, columns.Select(c => String.Format("        this.{0} = dr[indexes[\"{1}\"]].CastToT<{2}>();", c.Name.Replace(" ", ""), c.Name, c.Type))));
         }
 
         private String GetIQuickReadFunction(List<Column> columns)
@@ -144,7 +144,7 @@ ORDER BY c.column_id"; // 0 is db name // 1 is table name
     {{
         return new Dictionary<String, Type> {{ {2} }};
     }}", Environment.NewLine,
-         String.Join(", ", columns.Select(c => String.Format("this.{0}", c.Name))),
+         String.Join(", ", columns.Select(c => String.Format("this.{0}", c.Name.Replace(" ", "")))),
          String.Join(", ", columns.Select(c => String.Format("{{\"{0}\", typeof({1})}}", c.Name, c.Type.Replace("?", "")))));
         }
     }
