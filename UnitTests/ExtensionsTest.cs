@@ -232,10 +232,11 @@ namespace UnitTests
 
             //replace this regex in expected and actual because the runtime type name will be different each time
             var runtimeTypeRegex = new Regex("Runtime_assembly_\\d+_module_type");
+            var runtimeTypeRegex2 = new Regex("_IQPIMPL");
             var objs = GetIGroupingTestSet();
 
             var groups = objs.GetValue<List<Object>>("Products").GroupBy(p => new { Text = "This is the key", Discontinued = p.GetValue<Boolean>("Discontinued") });
-            Assert.AreEqual<String>(runtimeTypeRegex.Replace(expected, ""), runtimeTypeRegex.Replace(groups.SerializeToXML("Products"), ""));
+            Assert.AreEqual<String>(runtimeTypeRegex2.Replace(runtimeTypeRegex.Replace(expected, ""), ""), runtimeTypeRegex2.Replace(runtimeTypeRegex.Replace(groups.SerializeToXML("Products"), ""), ""));
         }
         
         [TestMethod()]
@@ -297,7 +298,6 @@ namespace UnitTests
         public void RelatedSetReadJSONSerializationKnownTypes()
         {
             String expected = File.ReadAllText(GetJSONFileFullPath("RelatedSetReadJSONKnownTypes.json"));
-
             Assert.AreEqual<String>(expected, ExecuteKnownTypesQuery().SerializeToJSON());
         }
 
@@ -305,7 +305,6 @@ namespace UnitTests
         public void RelatedSetReadJSONSerializationUnknownTypes()
         {
             String expected = File.ReadAllText(GetJSONFileFullPath("RelatedSetReadJSONUnknownTypes.json"));
-            
             Assert.AreEqual<String>(expected, ExecuteUnknownTypesQuery()[0].SerializeToJSON());
         }
 
@@ -313,7 +312,6 @@ namespace UnitTests
         public void RelatedSetReadJSONSerializationKnownTypesTableNames()
         {
             String expected = File.ReadAllText(GetJSONFileFullPath("RelatedSetReadJSONKnownTypesTableNames.json"));
-
             Assert.AreEqual<String>(expected, ExecuteKnownTypesQuery(new List<String> { "Customer", "Order", "OrderDetail" }).SerializeToJSON(true));
         }
 
@@ -321,7 +319,6 @@ namespace UnitTests
         public void RelatedSetReadJSONSerializationUnknownTypesTableNames()
         {
             String expected = File.ReadAllText(GetJSONFileFullPath("RelatedSetReadJSONUnknownTypesTableNames.json"));
-            
             Assert.AreEqual<String>(expected, ExecuteUnknownTypesQuery(new List<String> { "Customer", "Order", "OrderDetail" })[0].SerializeToJSON(true));
         }
 
