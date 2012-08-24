@@ -270,12 +270,13 @@ namespace System.Data.DBAccess.Generic
             var allNestedPData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetPopulateData(drf, tuple.ColumnNames, t));
 
             int numItems = dataRows.Count;
-            List<T> retList = new List<T>(numItems);
 
             var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, data, allNestedPData, db.ModelsData, typeof(T), true);
 
             if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
+                var retList = new List<T>(numItems);
+
                 db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
                 var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
                 var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
@@ -296,17 +297,11 @@ namespace System.Data.DBAccess.Generic
                 for (int i = 0; i < tuple.ColumnNames.Count; i++)
                     indexes.Add(tuple.ColumnNames[i], i);
 
-                for (int i = 0; i < numItems; i++)
-                {
-                    T t = new T();
-                    ((IQuickPopulate)t).DALPopulate(dataRows[i], indexes);
-                    retList.Add(t);
-                }
-
-                return retList;
+                return ((IQuickPopulate)new T()).DALPopulate<T>(dataRows, indexes);
             }
             else
             {
+                var retList = new List<T>(numItems);
                 del(retList, dataRows, numItems);
                 return retList;
             }
@@ -359,13 +354,14 @@ namespace System.Data.DBAccess.Generic
             var del = FastDynamicAccess.GetModelPopulateMethod(pData.MappedCols, pData.PropertyFormats, pData.PropertyTypes, data, allNestedPData, db.ModelsData, modelType, false);
 
             int numItems = dataRows.Count;
-            List<Object> retList = new List<Object>(numItems);
 
             if ((db.PopulateDefaultValues) && !modelType.DerivesInterface(typeof(IQuickPopulate)))
             {
                 db.WriteTrace(TraceLevel.DEBUG, "Populating default values.");
                 var dVData = db.GetDefaultValuesToPopulate(data, pData.ColUpperNames);
                 var allNestedDVData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetDefaultValuesToPopulate(db.ModelsData[t], pData.ColUpperNames));
+
+                var retList = new List<Object>(numItems);
 
                 del(retList, dataRows, numItems);
 
@@ -383,17 +379,11 @@ namespace System.Data.DBAccess.Generic
                 for (int i = 0; i < tuple.ColumnNames.Count; i++)
                     indexes.Add(tuple.ColumnNames[i], i);
 
-                for (int i = 0; i < numItems; i++)
-                {
-                    Object t = Activator.CreateInstance(modelType);
-                    ((IQuickPopulate)t).DALPopulate(dataRows[i], indexes);
-                    retList.Add(t);
-                }
-
-                return retList;
+                return ((IQuickPopulate)Activator.CreateInstance(modelType)).DALPopulate<Object>(dataRows, indexes);
             }
             else
             {
+                var retList = new List<Object>(numItems);
                 del(retList, dataRows, numItems);
                 return retList;
             }

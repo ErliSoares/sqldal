@@ -30,6 +30,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using System.Xml.Linq;
 using System.Data.DBAccess.Generic.RuntimeClass;
+using System.Reflection.Emit;
 
 namespace System.Data.DBAccess.Generic
 {
@@ -902,6 +903,11 @@ namespace System.Data.DBAccess.Generic
         private class UTF8StringWriter : StringWriter
         {
             public override Encoding Encoding { get { return Encoding.UTF8; } }
+        }
+
+        internal static void DeclareLocal<T>(this ILGenerator il)
+        {
+            il.DeclareLocal(typeof(T));
         }
     }
 

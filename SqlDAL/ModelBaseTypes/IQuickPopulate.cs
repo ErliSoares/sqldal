@@ -26,8 +26,8 @@ namespace System.Data.DBAccess.Generic
         /// <summary>
         /// Populates a Model using the user defined Populate method.  You should manually assign each member of a model which needs to be assigned a value based on the DataRow passed in.  This is the only function that will be called when populating the object.
         /// </summary>
-        /// <param name="dr">The data row returned by the SQL server.</param>
+        /// <param name="dataRows">The data rows returned by the SQL server.</param>
         /// <param name="colIndexes">Dictionary of column names to dr indexes.</param>
-        void DALPopulate(object[] dr, Dictionary<string, int> colIndexes);
+        List<T> DALPopulate<T>(List<object[]> dataRows, Dictionary<string, int> colIndexes) where T : class, new();
     }
 }

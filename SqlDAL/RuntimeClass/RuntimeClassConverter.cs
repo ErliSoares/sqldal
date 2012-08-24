@@ -211,9 +211,8 @@ namespace System.Data.DBAccess.Generic
 
                 var module = s_ABuilder.DefineDynamicModule(moduleName);
                 //define a new public sealed class which derives from DALRuntimeTypeBase
-                //public sealed class typeName : DALRuntimeTypeBase, IQuickPopulate
+                //public sealed class typeName : DALRuntimeTypeBase
                 var tBuilder = module.DefineType(typeName, TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, typeof(DALRuntimeTypeBase));
-                tBuilder.AddInterfaceImplementation(typeof(IQuickPopulate));
 
                 //implement the abstract TableName property
                 //public String TableName { get; }
@@ -235,7 +234,7 @@ namespace System.Data.DBAccess.Generic
                     var propertyName = p.Key;
                     var propertyType = p.Value;
 
-                    var field = tBuilder.DefineField(String.Format("<{0}>k__BackingField", propertyName), propertyType, FieldAttributes.Private);
+                    var field = tBuilder.DefineField(String.Format("<{0}>k__BackingField", propertyName), propertyType, FieldAttributes.Family);
                     classFields.Add(field);
                     var property = tBuilder.DefineProperty(propertyName, System.Reflection.PropertyAttributes.None, propertyType, new Type[] { propertyType });
 
@@ -299,10 +298,59 @@ namespace System.Data.DBAccess.Generic
                 }
                 #endregion
 
+                type = tBuilder.CreateType();
+
+                //public sealed class typeName_IQPIMPL : IQuickPopulate
+                tBuilder = module.DefineType(typeName + "_IQPIMPL", TypeAttributes.Public | TypeAttributes.Class | TypeAttributes.BeforeFieldInit | TypeAttributes.AutoLayout, type);
+                tBuilder.AddInterfaceImplementation(typeof(IQuickPopulate));
                 #region IQuickPopulate implementation
                 var convertToTMethod = typeof(Extensions).GetMethod("CastToT", new Type[] { typeof(Object) });
-                var dalPopulateMethod = tBuilder.DefineMethod("DALPopulate", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual, null, new Type[] { typeof(Object[]), typeof(Dictionary<String, int>) });
-                var dalPopulateIL = dalPopulateMethod.GetILGenerator();
+                var dalPopulateMethod = tBuilder.DefineMethod("DALPopulate", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual, typeof(List<Object>), new Type[] { typeof(List<Object[]>), typeof(Dictionary<String, int>) });
+                var genericParameters = dalPopulateMethod.DefineGenericParameters("T");
+                genericParameters[0].SetGenericParameterAttributes(GenericParameterAttributes.ReferenceTypeConstraint | GenericParameterAttributes.DefaultConstructorConstraint);
+                dalPopulateMethod.SetReturnType(typeof(List<>).MakeGenericType(genericParameters[0]));
+
+                var il = dalPopulateMethod.GetILGenerator();
+
+                //get count of dataRows
+                il.DeclareLocal<int>(); //num of rows 0
+                il.DeclareLocal<int>(); //int i 1
+                il.DeclareLocal<List<Object>>(); //T[] return 2
+                il.DeclareLocal<Object>(); // each instance that we create 3
+                il.DeclareLocal<Object[][]>(); //the datarows that were passed in 4
+                il.DeclareLocal<Object>(); //each temporary object that we are assigning 5
+                il.DeclareLocal<Object[]>(); // each datarow 6
+
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Call, typeof(List<Object[]>).GetMethod("get_Count"));
+                il.Emit(OpCodes.Stloc_0);
+
+
+                var exitLoopLabel = il.DefineLabel();
+                var beginLoopLabel = il.DefineLabel();
+
+                il.Emit(OpCodes.Ldloc_0); //create return array
+                il.Emit(OpCodes.Newobj, typeof(List<Object>).GetConstructor(new Type[] { typeof(int) }));
+                il.Emit(OpCodes.Stloc_2);
+
+                il.Emit(OpCodes.Ldc_I4_0);
+                il.Emit(OpCodes.Ldloc_0); //num of elements
+                //if no elements to populate, quit
+                il.Emit(OpCodes.Bge, exitLoopLabel);
+
+                il.Emit(OpCodes.Ldc_I4_0); //int i
+                il.Emit(OpCodes.Stloc_1);
+
+                il.MarkLabel(beginLoopLabel);
+
+                il.Emit(OpCodes.Newobj, type.GetConstructor(new Type[] { }));
+                il.Emit(OpCodes.Stloc_3);
+
+                il.Emit(OpCodes.Ldarg_1);
+                il.Emit(OpCodes.Ldloc_1);
+                il.Emit(OpCodes.Call, typeof(List<Object[]>).GetMethod("get_Item"));
+                il.Emit(OpCodes.Stloc_S, 6);
+
                 int fieldIndex = 0;
                 foreach (var p in properties)
                 {
@@ -313,21 +361,86 @@ namespace System.Data.DBAccess.Generic
                         *          Property = dr[propertyIndex].ConvertToT<property_type>();
                         * }
                         */
-                    dalPopulateIL.Emit(OpCodes.Ldarg_0); //push class instance onto stack
-                    dalPopulateIL.Emit(OpCodes.Ldarg_1); //push parameter Object[] dr onto stack
-                    //don't have to push Dictionary<String, int> indexes onto the stack because we never use it
+                    il.Emit(OpCodes.Ldloc_3); //push class instance onto stack
+
+                    il.Emit(OpCodes.Ldloc_S, 6);
+
                     //load the array index we want to read from the Object[] dr
                     if (fieldIndex <= 8)
-                        dalPopulateIL.Emit(GetLDC_I4_Code(fieldIndex));
+                        il.Emit(GetLDC_I4_Code(fieldIndex));
                     else if (fieldIndex <= 127)
-                        dalPopulateIL.Emit(OpCodes.Ldc_I4_S, fieldIndex);
+                        il.Emit(OpCodes.Ldc_I4_S, fieldIndex);
                     else
-                        dalPopulateIL.Emit(OpCodes.Ldc_I4, fieldIndex);
-                    dalPopulateIL.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
-                    dalPopulateIL.EmitCall(OpCodes.Call, convertToTMethod.MakeGenericMethod(p.Value), null); //call ConvertToT method.  use MakeGenericMethod to get the generic version of this method which accepts the type we need
-                    dalPopulateIL.Emit(OpCodes.Stfld, classFields[fieldIndex++]); //set the field
+                        il.Emit(OpCodes.Ldc_I4, fieldIndex);
+                    il.Emit(OpCodes.Ldelem_Ref); //retrieves the array index from Object[] dr that was loaded onto the stack
+
+
+                    if (!p.Value.IsValueType || p.Value.IsNullableValueType())
+                    {
+                        //if it's a ref type we'll want to store it for later use
+                        il.Emit(OpCodes.Stloc_S, 5); //store it for later use
+                        il.Emit(OpCodes.Ldloc_S, 5);
+
+                        /*if (value == DBNull.Value)
+                         *      value = null;
+                         * 
+                         * return (T)value;
+                         */
+                        var setPropertyLabel = il.DefineLabel();
+                        var loadNullLabel = il.DefineLabel();
+
+                        il.Emit(OpCodes.Ldsfld, typeof(DBNull).GetField("Value"));
+                        il.Emit(OpCodes.Beq, loadNullLabel); //if (value == DBNull.Value) jump to load null
+
+                        il.Emit(OpCodes.Ldloc_S, 5); //otherwise get the value back on the top of the stack
+                        il.Emit(OpCodes.Br, setPropertyLabel);
+
+                        //load null onto stack and jump to set the method
+                        il.MarkLabel(loadNullLabel);
+                        il.Emit(OpCodes.Ldnull); // load a null
+
+                        il.MarkLabel(setPropertyLabel);
+                        if (p.Value.IsValueType)
+                        {
+                            il.Emit(OpCodes.Unbox, p.Value);
+                            il.Emit(OpCodes.Ldobj, p.Value);
+                        }
+                        else
+                        {
+                            il.Emit(OpCodes.Castclass, p.Value);
+                        }
+                    }
+                    else // value type
+                    {
+                        //simply cast to the value type
+                        il.Emit(OpCodes.Castclass, p.Value);
+                        il.Emit(OpCodes.Unbox_Any, p.Value); //unbox if a value type
+                    }
+
+                    //il.EmitCall(OpCodes.Call, convertToTMethod.MakeGenericMethod(p.Value), null); //call ConvertToT method.  use MakeGenericMethod to get the generic version of this method which accepts the type we need
+                    
+                    
+                    il.Emit(OpCodes.Stfld, classFields[fieldIndex++]); //set the field
                 }
-                dalPopulateIL.Emit(OpCodes.Ret); //return
+
+                //add it to the list
+                il.Emit(OpCodes.Ldloc_2); //the return list array
+                il.Emit(OpCodes.Ldloc_3); // the model that we populated
+                il.Emit(OpCodes.Call, typeof(List<Object>).GetMethod("Add"));
+
+                il.Emit(OpCodes.Ldloc_1);
+                il.Emit(OpCodes.Ldc_I4_1);
+                il.Emit(OpCodes.Add);
+                il.Emit(OpCodes.Stloc_1);
+                il.Emit(OpCodes.Ldloc_1);
+                il.Emit(OpCodes.Ldloc_0);
+                il.Emit(OpCodes.Blt, beginLoopLabel);
+
+                il.MarkLabel(exitLoopLabel);
+
+                il.Emit(OpCodes.Ldloc_2);
+
+                il.Emit(OpCodes.Ret); //return
                 #endregion
 
                 type = tBuilder.CreateType();
