@@ -331,7 +331,10 @@ namespace System.Data.DBAccess.Generic
             if (modelType == typeof(Object))
             {
                 db.WriteTrace(TraceLevel.INFORMATION, "Model type is object.  Populating with a runtime class.");
-                return db.PopulateModelBaseEnumeration(tuple, dataRows.GetRuntimeType(tuple.TableName, tuple.ColumnNames, tuple.ColumnTypes, parentChildPropertyName));
+                var type = dataRows.GetRuntimeType(tuple.TableName, tuple.ColumnNames, tuple.ColumnTypes, parentChildPropertyName);
+                //the runtime type will really be one type wrapping another.. validate the inner type!
+                db.ValidateForDAL(Activator.CreateInstance(type.Assembly.GetTypes().Single(t => t.Name == type.Name.Substring(0, type.Name.Length - 8))));
+                return db.PopulateModelBaseEnumeration(tuple, type);
             }
 
             if (!db.ModelsData.ContainsKey(modelType))
