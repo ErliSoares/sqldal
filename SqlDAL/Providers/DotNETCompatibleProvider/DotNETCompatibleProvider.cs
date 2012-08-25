@@ -17,6 +17,7 @@ limitations under the License.
 using System.Collections.Generic;
 using System.Data.DBAccess.Generic.Exceptions;
 using System.Linq;
+using System.Diagnostics;
 
 namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
 {
@@ -502,8 +503,10 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
 
                 try
                 {
-                    var start = DateTime.Now;
+                    var s = new Stopwatch();
+                    s.Start();
                     var retValue = sqlAction(cmd);
+                    s.Stop();
                     this.RaiseOnQueryComplete(new DALQueryCompleteEventArgs
                     {
                         Connection = cmd.Connection,
@@ -511,7 +514,7 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
                         InputParameters = cmd.Parameters.OfType<TParameter>().ToList(),
                         QueryMethod = this.GetOriginalCallingFunctionName(),
                         QueryString = this.QueryString,
-                        TimeElapsed = DateTime.Now - start,
+                        TimeElapsed = s.Elapsed,
                         Timeout = cmd.CommandTimeout,
                         Transaction = cmd.Transaction
                     });
