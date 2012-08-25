@@ -40,7 +40,7 @@ namespace System.Data.DBAccess.Generic
     public static class Extensions
     {
         /// <summary>
-        /// Dictioanry of mappings between CLR types and Sql types.
+        /// Dictionaryof mappings between CLR types and Sql types.
         /// </summary>
         private static Dictionary<Type, DbType> m_typeToDBType;
 
