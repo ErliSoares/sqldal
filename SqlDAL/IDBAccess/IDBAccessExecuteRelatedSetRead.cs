@@ -746,7 +746,7 @@ namespace System.Data.DBAccess.Generic
         /// <typeparam name="T12">The type representing the 12th return data set.</typeparam>
         /// <typeparam name="T13">The type representing the 13th return data set.</typeparam>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>
@@ -905,7 +905,7 @@ namespace System.Data.DBAccess.Generic
         /// <typeparam name="T15">The type representing the 15th return data set.</typeparam>
         /// <typeparam name="T16">The type representing the 16th return data set.</typeparam>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>
@@ -950,7 +950,7 @@ namespace System.Data.DBAccess.Generic
         /// Executes a read operation against a SQL database which results in multiple sets being returned using runtime types.
         /// </summary>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>
@@ -978,14 +978,14 @@ namespace System.Data.DBAccess.Generic
         /// </summary>
         /// <param name="returnTypes">An enumeration of the types returned by the ExecuteSetRead command.</param>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>
         /// <param name="conn">The SQL connection with which to perform the operation.</param>
         /// <param name="timeout">The command timeout.  Defaults to 30 seconds.</param>
         /// <param name="tran">An optional transaction to use for the query.  If this is supplied, the transaction connection will be used and the conn parameter will be ignored.</param>
-        /// <returns>A List of a List of objects. Call .OfType on each list in order to cast it back to the correct model type.</returns>
+        /// <returns>A List&lt;List&lt;Object&gt;&gt;. Call .OfType on each list in order to cast it back to the correct model type.</returns>
         public static List<List<Object>> ExecuteRelatedSetRead(this IDBAccess db, List<DALRelationship> relationships, IEnumerable<Type> returnTypes)
         {
             db.EnsureRelationshipsHaveIndexes(relationships);
@@ -1278,7 +1278,7 @@ namespace System.Data.DBAccess.Generic
         /// <typeparam name="T12">The type representing the 12th return data set.</typeparam>
         /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of a 12 type DALTuple.  If this is null, no callback will be made.</param>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>
@@ -1406,7 +1406,7 @@ namespace System.Data.DBAccess.Generic
         /// <typeparam name="T15">The type representing the 15th return data set.</typeparam>
         /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of 15 type DALTuple.  If this is null, no callback will be made.</param>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>
@@ -1486,9 +1486,9 @@ namespace System.Data.DBAccess.Generic
         /// Executes an asynchronous read operation against a SQL database which results in multiple sets being returned.
         /// </summary>
         /// <param name="returnTypes">An enumeration of the types returned by the ExecuteSetRead command.</param>
-        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List List Object.  If this is null, no callback will be made.</param>
+        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List&lt;List&lt;Object&gt;&gt;.  If this is null, no callback will be made.</param>
         /// <param name="queryString">The stored procedure name or query string to execute.</param>
-        /// <param name="input">The input object.  This must be an object of type ModelBase, List SqlParameter, or an anonymous type.</param>
+        /// <param name="input">The input object.  This must be an object of type ModelBase, List&lt;SqlParameter&gt;, or an anonymous type.</param>
         /// <param name="storedProcedure">True of False flag representing whether or not this is a stored procedure call.</param>
         /// <param name="prefixDirection">True or False to prefix the input/output parameter prefix to each parameter name.</param>
         /// <param name="populateDefaultValues">If true, any output model properties which are not included in the return from the call are filled in using the value set in their default value attributes.  This option is ignored if the output IModel inherits the IQuickPopulate interface.</param>

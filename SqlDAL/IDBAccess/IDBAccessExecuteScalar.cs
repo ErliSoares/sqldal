@@ -108,7 +108,7 @@ namespace System.Data.DBAccess.Generic
         /// Performs an asynchronous read operation against a SQL database assuming each returned row contains one column.  Returns an enumeration of each row casted to a T.
         /// </summary>
         /// <typeparam name="T">The type of object to cast the return values to.</typeparam>
-        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List T.  If this is null, no callback will be made.</param>
+        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List&lt;T&gt;.  If this is null, no callback will be made.</param>
         public static void ExecuteScalarEnumerationAsync<T>(this IDBAccess db, System.Data.DBAccess.Generic.AsyncDelegates.ExecuteScalarEnumerationCallbackDelegate<T> callback = null)
         {
             new Task(() =>

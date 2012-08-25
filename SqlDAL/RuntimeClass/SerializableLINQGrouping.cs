@@ -156,7 +156,7 @@ namespace System.Data.DBAccess.Generic.RuntimeClass
             //get the actual group objects.  instantiate new DALIGrouping objects passing in the key and that key's values
             var groupingObjs = newKeyObjs.Select((k, i) => Activator.CreateInstance(groupingType, k, newValueObjs[i])).ToList();
 
-            //create a new instance of this class calling the List Object constructor
+            //create a new instance of this class calling the List&lt;Object&gt; constructor
             Object retObject = Activator.CreateInstance(retObjectType, groupingObjs);
 
             return (SerializableLINQGrouping)retObject;

@@ -109,7 +109,7 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
         /// <summary>
         /// Executes an asynchronous read operation against a database using the provided options.
         /// </summary>
-        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List List DataRow.  If this is null, no callback will be made.</param>
+        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List&lt;List&lt;DataRow&gt;&gt;.  If this is null, no callback will be made.</param>
         public void ExecuteSetReadAsync(System.Data.DBAccess.Generic.AsyncDelegates.ExecuteSetReadCallbackDelegate callback = null)
         {
             new Task(() =>

@@ -1098,7 +1098,7 @@ namespace System.Data.DBAccess.Generic
         /// Executes a read operation against a SQL database which results in multiple sets being returned.
         /// </summary>
         /// <param name="returnTypes">An enumeration of the types returned by the ExecuteSetRead command.</param>
-        /// <returns>A List of a List of objects. Call .OfType on each list in order to cast it back to the correct model type.</returns>
+        /// <returns>A List&lt;List&lt;Object&gt;&gt;. Call .OfType on each list in order to cast it back to the correct model type.</returns>
         public static List<List<Object>> ExecuteSetRead(this IDBAccess db, IEnumerable<Type> returnTypes)
         {
             var tables = db.ExecuteSetReadQuick();
@@ -1836,7 +1836,7 @@ namespace System.Data.DBAccess.Generic
         /// Executes an asynchronous read operation against a SQL database which results in multiple sets being returned.
         /// </summary>
         /// <param name="returnTypes">An enumeration of the types returned by the ExecuteSetRead command.</param>
-        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List List Object.  If this is null, no callback will be made.</param>
+        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List&lt;List&lt;Object&gt;&gt;.  If this is null, no callback will be made.</param>
         public static void ExecuteSetReadAsync(this IDBAccess db, IEnumerable<Type> returnTypes, System.Data.DBAccess.Generic.AsyncDelegates.ExecuteSetReadObjectsCallbackDelegate callback = null)
         {
             new Task(() =>

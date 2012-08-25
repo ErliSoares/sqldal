@@ -124,7 +124,7 @@ namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
         /// Executes an asynchronous read operation against a database using the provided options.
         /// </summary>
         /// <typeparam name="T">The type of output models to return.</typeparam>
-        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List DataRow.  If this is null, no callback will be made.</param>
+        /// <param name="callback">The callback function to execute after the query is complete.  The function takes one parameter of type List&lt;DataRow&gt;.  If this is null, no callback will be made.</param>
         public void ExecuteReadAsync(System.Data.DBAccess.Generic.AsyncDelegates.ExecuteReadCallbackDelegate callback = null)
         {
             new Task(() =>
