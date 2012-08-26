@@ -17,20 +17,20 @@ limitations under the License.
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Data.DBAccess.Generic.RuntimeClass;
 using System.Data.SqlClient;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using System.Text;
 using System.Web.Script.Serialization;
 using System.Xml;
-using System.Xml.Serialization;
 using System.Xml.Linq;
-using System.Data.DBAccess.Generic.RuntimeClass;
-using System.Reflection.Emit;
+using System.Xml.Serialization;
 
 namespace System.Data.DBAccess.Generic
 {
@@ -716,11 +716,11 @@ namespace System.Data.DBAccess.Generic
                         //omit namespaces as well
                         if (omitXmlDeclaration)
                         {
-                            new XmlSerializer(typeof(DALRuntimeTypeList), new XmlAttributeOverrides(), new Type[] { }, new XmlRootAttribute(rootElementName), "").Serialize(xw, new DALRuntimeTypeList(baseObjs), ns);
+                            new XmlSerializer(typeof(DALRuntimeTypeList), new XmlAttributeOverrides(), Type.EmptyTypes, new XmlRootAttribute(rootElementName), "").Serialize(xw, new DALRuntimeTypeList(baseObjs), ns);
                         }
                         else
                         {
-                            new XmlSerializer(typeof(DALRuntimeTypeList), new XmlAttributeOverrides(), new Type[] { }, new XmlRootAttribute(rootElementName), "").Serialize(xw, new DALRuntimeTypeList(baseObjs));
+                            new XmlSerializer(typeof(DALRuntimeTypeList), new XmlAttributeOverrides(), Type.EmptyTypes, new XmlRootAttribute(rootElementName), "").Serialize(xw, new DALRuntimeTypeList(baseObjs));
                         }
                     }
                     else if (obj.GetType().IsAnonymousType())

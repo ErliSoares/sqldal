@@ -16,8 +16,8 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Data.DBAccess.Generic.Exceptions;
-using System.Linq;
 using System.Diagnostics;
+using System.Linq;
 
 namespace System.Data.DBAccess.Generic.Providers.DotNETCompatibleProvider
 {

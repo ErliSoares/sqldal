@@ -14,10 +14,8 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace System.Data.DBAccess.Generic
@@ -263,7 +261,7 @@ namespace System.Data.DBAccess.Generic
         /// </summary>
         /// <param name="db">The IDBAcess object associated with this segment.</param>
         /// <param name="types">The known types.</param>
-        internal CPSegment(IDBAccess db, Type [] types) : this(db, types ?? new Type[] { }, types == null ? -1 : types.Length)
+        internal CPSegment(IDBAccess db, Type [] types) : this(db, types ?? Type.EmptyTypes, types == null ? -1 : types.Length)
         { }
 
         /// <summary>

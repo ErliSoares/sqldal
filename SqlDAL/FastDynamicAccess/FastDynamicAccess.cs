@@ -16,12 +16,12 @@ limitations under the License.
 
 using System.Collections;
 using System.Collections.Generic;
+using System.Data.DBAccess.Generic.Exceptions;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Runtime.Serialization;
 using System.Threading;
-using System.Data.DBAccess.Generic.Exceptions;
 
 namespace System.Data.DBAccess.Generic
 {
@@ -122,6 +122,7 @@ namespace System.Data.DBAccess.Generic
         /// Generates assembly and getter/setter methods for each property in a type.
         /// </summary>
         /// <param name="type">The type.</param>
+        /// <param name="properties">The properties which will be used to generate the type.</param>
         private void GenerateAssemblies(Type type, List<PropertyInfo> properties)
         {
             int index = 0;
@@ -535,7 +536,7 @@ namespace System.Data.DBAccess.Generic
 
             if (thisModelNum == 1 || instantiateNest) //if it's the top model or a nested class that needs instantiation, create it
             {
-                il.Emit(OpCodes.Newobj, modelType.GetConstructor(new Type[] { }));
+                il.Emit(OpCodes.Newobj, modelType.GetConstructor(Type.EmptyTypes));
             }
             else // use the existing nested model
             {
