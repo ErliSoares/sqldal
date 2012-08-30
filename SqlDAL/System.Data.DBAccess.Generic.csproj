@@ -74,6 +74,7 @@
     <Compile Include="Providers\In Memory\InMemoryAccess.cs" />
     <Compile Include="Providers\MySQL\MySQLAccess.cs" />
     <Compile Include="Providers\ODBC\ODBCAccess.cs" />
+    <Compile Include="Providers\OLEDB\OLEDBAccess.cs" />
     <Compile Include="Providers\SQL\AutoSelectQuery.cs" />
     <Compile Include="IDBAccess\DALTuple.cs" />
     <Compile Include="Providers\SQL\Events.cs" />
