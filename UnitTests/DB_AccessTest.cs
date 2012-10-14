@@ -33,8 +33,8 @@ namespace UnitTests
     [TestClass()]
     public class DB_AccessTest
     {
-        private static String DBUsername { get { return ""; } }
-        private static String ConnectionString { get { return ""; } }
+        private static String DBUsername { get { return "dicorp\\badams"; } }
+        private static String ConnectionString { get { return "server=localhost;initial catalog=SqlDALUnitTests;integrated security=true"; } }
         private static SqlDBAccess NewDB { get { return new SqlDBAccess(ConnectionString); } }
         private int NumOfReadResults { get { return 5; } }
 

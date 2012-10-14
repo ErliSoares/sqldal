@@ -115,6 +115,7 @@ namespace System.Data.DBAccess.Generic
                 this.Add(cpsrbWithChildren);
 
                 cpsrbWithChildren = cpsrbWithChildren.Next;
+                break;
             }
         }
 

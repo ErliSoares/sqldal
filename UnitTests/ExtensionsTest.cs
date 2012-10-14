@@ -99,7 +99,7 @@ namespace UnitTests
             return String.Format("{0}\\JSON\\{1}", AppDomain.CurrentDomain.BaseDirectory, fileName);
         }
 
-        private SqlDBAccess NewDB { get { return new SqlDBAccess(""); } }
+        private SqlDBAccess NewDB { get { return new SqlDBAccess("server=localhost;initial catalog=northwind;integrated security=true"); } }
 
         private DALTuple<Customer, Order, OrderDetail> ExecuteKnownTypesQuery(List<String> tableNames = null)
         {

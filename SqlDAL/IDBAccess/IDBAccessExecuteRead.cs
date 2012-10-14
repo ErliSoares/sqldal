@@ -63,7 +63,12 @@ namespace System.Data.DBAccess.Generic
                 };
             }
 
-            var data = db.ModelsData[modelType];
+            ModelData data = null;
+            if (!db.ModelsData.TryGetValue(modelType, out data))
+            {
+                return null;
+            }
+
             //for case insensitivity
             db.WriteTrace(TraceLevel.DEBUG, "Getting column names uppercase.");
             var colUpperNames = colNames.Select(c => c.ToUpper()).ToList();
@@ -136,11 +141,12 @@ namespace System.Data.DBAccess.Generic
         /// <returns>The value as a T.</returns>
         private static T GetNestedPopulateValue<T>(this IDBAccess db, String colName, ModelData data, Func<ModelData, String, T> valueSelector)
         {
-            foreach (var nest in data.NestedModelBaseFields)
+            ModelData thisData = null;
+            foreach (var nest in data.NestedModelBaseFields.Where(n => db.ModelsData.TryGetValue(n.Value.FieldType, out thisData)))
             {
                 var type = nest.Value.FieldType;
                 db.WriteTrace(TraceLevel.DEBUG, "Searching type {0}", type);
-                var thisData = db.ModelsData[type];
+                thisData = db.ModelsData[type];
                 var sprocUppers = thisData.SprocParamterNameToModelPropertyName.Where(kvp => thisData.ModelProperties[kvp.Value].PropertyType.DeclaringType == null).ToDictionary(kvp => kvp.Key.ToUpper(), kvp => kvp.Value);
                 String propertyName;
                 foreach (var p in thisData.ModelFields)
@@ -209,14 +215,17 @@ namespace System.Data.DBAccess.Generic
         /// <returns>An enumeration of types representing all types found within a model.</returns>
         internal static IEnumerable<Type> GetAllNestedTypes(this IDBAccess db, Type modelType)
         {
-            db.WriteTrace(TraceLevel.DEBUG, "Getting all nested types in type {0}", modelType);
-            foreach (var t in db.ModelsData[modelType].NestedModelBaseFields.Values)
+            if (db.ModelsData.ContainsKey(modelType))
             {
-                db.WriteTrace(TraceLevel.DEBUG, "Returning type {0}", t.FieldType);
-                yield return t.FieldType;
+                db.WriteTrace(TraceLevel.DEBUG, "Getting all nested types in type {0}", modelType);
+                foreach (var t in db.ModelsData[modelType].NestedModelBaseFields.Values)
+                {
+                    db.WriteTrace(TraceLevel.DEBUG, "Returning type {0}", t.FieldType);
+                    yield return t.FieldType;
 
-                foreach (var it in db.GetAllNestedTypes(t.FieldType))
-                    yield return it;
+                    foreach (var it in db.GetAllNestedTypes(t.FieldType))
+                        yield return it;
+                }
             }
         }
 
@@ -267,7 +276,7 @@ namespace System.Data.DBAccess.Generic
             var pData = db.GetPopulateData(drf, tuple.ColumnNames, modelType);
 
             db.WriteTrace(TraceLevel.DEBUG, "Getting all nested populate data objects.");
-            var allNestedPData = db.GetAllNestedTypes(modelType).ToDictionary(t => t, t => db.GetPopulateData(drf, tuple.ColumnNames, t));
+            var allNestedPData = db.GetAllNestedTypes(modelType).Distinct().ToDictionary(t => t, t => db.GetPopulateData(drf, tuple.ColumnNames, t));
 
             int numItems = dataRows.Count;
 

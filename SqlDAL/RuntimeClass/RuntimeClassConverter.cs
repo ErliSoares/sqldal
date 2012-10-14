@@ -167,7 +167,7 @@ namespace System.Data.DBAccess.Generic
                         Type = colTypes[i]
                     };
                 }
-            }).ToDictionary(c => c.Name, c => c.Type);
+            }).ToDictionary(c => c.Name.Replace("#", "_NUM").Replace(" ", "_"), c => c.Type);
         }
 
         /// <summary>
@@ -349,7 +349,7 @@ namespace System.Data.DBAccess.Generic
                     il.Emit(OpCodes.Ldarg_1);
                     il.Emit(OpCodes.Ldloc_1);
                     il.Emit(OpCodes.Call, typeof(List<Object[]>).GetMethod("get_Item"));
-                    il.Emit(OpCodes.Stloc_S, 6);
+                    il.Emit(OpCodes.Stloc_S, (ushort)6);
 
                     int fieldIndex = 0;
                     foreach (var p in properties)
@@ -363,7 +363,7 @@ namespace System.Data.DBAccess.Generic
                             */
                         il.Emit(OpCodes.Ldloc_3); //push class instance onto stack
 
-                        il.Emit(OpCodes.Ldloc_S, 6);
+                        il.Emit(OpCodes.Ldloc_S, (ushort)6);
 
                         //load the array index we want to read from the Object[] dr
                         if (fieldIndex <= 8)
@@ -378,8 +378,8 @@ namespace System.Data.DBAccess.Generic
                         if (!p.Value.IsValueType || p.Value.IsNullableValueType())
                         {
                             //if it's a ref type we'll want to store it for later use
-                            il.Emit(OpCodes.Stloc_S, 5); //store it for later use
-                            il.Emit(OpCodes.Ldloc_S, 5);
+                            il.Emit(OpCodes.Stloc_S, (ushort)5); //store it for later use
+                            il.Emit(OpCodes.Ldloc_S, (ushort)5);
 
                             /*if (value == DBNull.Value)
                              *      value = null;
@@ -392,7 +392,7 @@ namespace System.Data.DBAccess.Generic
                             il.Emit(OpCodes.Ldsfld, typeof(DBNull).GetField("Value"));
                             il.Emit(OpCodes.Beq, loadNullLabel); //if (value == DBNull.Value) jump to load null
 
-                            il.Emit(OpCodes.Ldloc_S, 5); //otherwise get the value back on the top of the stack
+                            il.Emit(OpCodes.Ldloc_S, (ushort)5); //otherwise get the value back on the top of the stack
                             il.Emit(OpCodes.Br, setPropertyLabel);
 
                             //load null onto stack and jump to set the method

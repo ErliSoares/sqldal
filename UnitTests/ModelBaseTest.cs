@@ -358,13 +358,13 @@ namespace UnitTests
         }
 
         [TestMethod()]
-        [ExpectedException(typeof(NullReferenceException))]
         public void GetNullableValueTypeValueTest_NonNullableValueType()
         {
             ClassWithNullableValueType target = new ClassWithNullableValueType();
             var db = new SqlDBAccess();
             db.ValidateForDAL(target);
-            db.GetNullableValueTypeValue(target, "NonNullableValueType", ((IDBAccess)db).ModelsData[typeof(ClassWithNullableValueType)]);
+            var v = db.GetNullableValueTypeValue(target, "NonNullableValueType", ((IDBAccess)db).ModelsData[typeof(ClassWithNullableValueType)]);
+            Assert.AreEqual<int>(0, (int)v);
         }
         #endregion
 
@@ -591,6 +591,28 @@ namespace UnitTests
             };
 
             var result = new SqlDBAccess().PopulateModelBaseEnumeration<NestedModelCustomConstructor>(tuple);
+
+            Assert.AreEqual<int>(5, result[0].FirstInt);
+            Assert.AreEqual<int>(8, result[1].FirstInt);
+            Assert.AreEqual<int>(6, result[0].Nest.TheInt);
+            Assert.AreEqual<int>(7, result[1].Nest.TheInt);
+            Assert.AreEqual<String>("Hello World", result[0].Nest.CustomString);
+            Assert.AreEqual<String>("Hello World", result[1].Nest.CustomString);
+        }
+
+        [TestMethod()]
+        public void NestedPopulateCustomConstructorDefaultValuesOn()
+        {
+            var tuple = new ExecuteReadQuickTuple
+            {
+                ColumnNames = new List<String> { "FirstInt", "TheInt" },
+                ColumnTypes = new List<Type> { typeof(int), typeof(int) },
+                DataRows = new List<Object[]> { new Object[] { 5, 6 }, new Object[] { 8, 7 } }
+            };
+
+            var db = new SqlDBAccess();
+            db.PopulateDefaultValues = true;
+            var result = db.PopulateModelBaseEnumeration<NestedModelCustomConstructor>(tuple);
 
             Assert.AreEqual<int>(5, result[0].FirstInt);
             Assert.AreEqual<int>(8, result[1].FirstInt);

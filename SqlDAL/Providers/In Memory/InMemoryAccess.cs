@@ -16,10 +16,12 @@ limitations under the License.
 
 using System.Collections.Generic;
 using System.Linq;
+using System.Data.DBAccess.Generic.Exceptions;
+using System.Collections;
 
 namespace System.Data.DBAccess.Generic.Providers.In_Memory
 {
-    public class InMemoryAccess<T> : IDBAccess, ICustomPopulate
+    public class InMemoryAccess<T> : IDBAccess, ICustomPopulate, IEnumerable<T>
         where T : class, new()
     {
         /// <summary>
@@ -38,6 +40,8 @@ namespace System.Data.DBAccess.Generic.Providers.In_Memory
         {
             this.m_Source = source.ToList();
             this.m_TableName = tableName;
+            ((IDBAccess)this).ModelsData = new Dictionary<Type, ModelData>();
+            this.ValidateForDAL(typeof(T));
         }
 
         /// <summary>
@@ -96,11 +100,25 @@ namespace System.Data.DBAccess.Generic.Providers.In_Memory
         /// <summary>
         /// Executes an ExecuteScalar against the objects source.  This returns the first element from the enumeration.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The first element from the enumeration.</returns>
         public Object ExecuteScalar()
         {
             return this.m_Source.First();
         }
+
+        /// <summary>
+        /// Executes a read operation against the objects source.  This returns the objects.
+        /// </summary>
+        /// <returns>The list of objects.</returns>
+        public List<T> ExecuteRead()
+        {
+            return this.m_Source;
+        }
+
+        /// <summary>
+        /// ModelsData not supported for InMemory provider.
+        /// </summary>
+        Dictionary<Type, ModelData> IDBAccess.ModelsData { get; set; }
 
         #region Unsupported interface functions
         /// <summary>
@@ -138,15 +156,16 @@ namespace System.Data.DBAccess.Generic.Providers.In_Memory
             get { throw new NotImplementedException("TraceOutputLevel not supported for InMemory provider."); }
             set { throw new NotImplementedException("TraceOutputLevel not supported for InMemory provider."); }
         }
-
-        /// <summary>
-        /// ModelsData not supported for InMemory provider.
-        /// </summary>
-        Dictionary<Type, ModelData> IDBAccess.ModelsData
-        {
-            get { throw new NotImplementedException("ModelsData not supported for InMemory provider."); }
-            set { throw new NotImplementedException("ModelsData not supported for InMemory provider."); }
-        }
         #endregion
+
+        public IEnumerator<T> GetEnumerator()
+        {
+            return this.m_Source.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return (this.m_Source as IEnumerable).GetEnumerator();
+        }
     }
 }

@@ -73,7 +73,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="modelType">The type.</param>
         /// <exception cref="ModelPropertyMisconfiguredException">Thrown if duplicate SQL parameter names are defined.</exception>
         /// <exception cref="ModelPropertyInvalidException">Thrown if duplicate SQL parameter names are defined using a case insensitive compare.</exception>
-        private static void ValidateForDAL(this IDBAccess db, Type modelType)
+        internal static void ValidateForDAL(this IDBAccess db, Type modelType)
         {
             lock (db.ModelsData)
             {
@@ -156,6 +156,7 @@ namespace System.Data.DBAccess.Generic
 
                 data.NestedModelBaseFields = modelType.GetProperties()
                     .Where(p => db.IsNestedProperty(modelType, p.Name))
+                    .Where(p => Attribute.GetCustomAttribute(p, typeof(DALIgnoreAttribute)) == null)
                     .Select(p => new { Name = p.Name, Field = db.GetFieldByPropertyName(modelType, p.Name, data) })
                     .ToDictionary(p => p.Name, p => p.Field);
 
@@ -232,7 +233,7 @@ namespace System.Data.DBAccess.Generic
         /// <exception cref="ModelPropertyMisconfiguredException">Thrown if the there are multiple properties with the same SQL parameter name when searching all nested models of this type.</exception>
         /// <exception cref="TableQuickReadMisconfiguredException">Thrown if the length of the array returned by ToObjectArray does not match the number of entries returned by GetColumnNamesTypes in an IQuickRead UDTable type.</exception>
         /// <exception cref="TableQuickReadMisconfiguredException">Thrown if any types returned by GetColumnNamesTypes are a nullable value type in an IQuickREad UDTable table.</exception>
-        private static void AssertModelIsValid(this IDBAccess db, ModelData data, Type modelType)
+        internal static void AssertModelIsValid(this IDBAccess db, ModelData data, Type modelType)
         {
             //validate the configuration of model
 
@@ -348,7 +349,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="modelType">The parent model type.</param>
         /// <param name="data">The ModelData object for this type.</param>
         /// <returns>An enumeration of error messages.  If nothing returns, the model passes.</returns>
-        private static IEnumerable<String> GetAllNestedModelBaseTypeConflicts(this IDBAccess db, Type modelType, ModelData data)
+        internal static IEnumerable<String> GetAllNestedModelBaseTypeConflicts(this IDBAccess db, Type modelType, ModelData data)
         {
             foreach (var p in modelType.GetProperties().Where(p => p.PropertyType.IsUserType() && p.DeclaringType != modelType && modelType.DerivesFromType(p.DeclaringType)))
             {
@@ -387,7 +388,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="modelType">The type.</param>
         /// <param name="dict">The dictionary.</param>
         /// <param name="data">The ModelData object of the type.</param>
-        private static void PopulateNestedModelPropertiesDictionary(this IDBAccess db, Type modelType, Dictionary<Type, List<String>> dict, ModelData data)
+        internal static void PopulateNestedModelPropertiesDictionary(this IDBAccess db, Type modelType, Dictionary<Type, List<String>> dict, ModelData data)
         {
             if (dict.ContainsKey(modelType)) return;
 
@@ -495,7 +496,7 @@ namespace System.Data.DBAccess.Generic
 
             if (!hasProp)
             {
-                foreach (var p in modelType.GetProperties().Where(p => db.IsNestedProperty(modelType, p.Name)))
+                foreach (var p in modelType.GetProperties().Where(p => db.ModelsData.ContainsKey(p.PropertyType) && db.IsNestedProperty(modelType, p.Name)))
                 {
                     prop = db.FindNestedPropertyByName(p.PropertyType, propertyName, db.ModelsData[p.PropertyType]);
                     if (prop != null) break;
@@ -663,10 +664,16 @@ namespace System.Data.DBAccess.Generic
             Type modelType = model.GetType();
             FieldInfo pInfo = data.ModelFields[property];
 
-            Object pInfoValue = pInfo.GetValue(model);
+            Object pInfoValue = pInfo != null ? pInfo.GetValue(model)
+                     : data.ModelProperties[property].GetValue(model, null);
+
+            if (pInfoValue != null && !pInfoValue.GetType().IsNullableValueType())
+                return pInfoValue;
+
             if (pInfoValue == null) return null; // if the nullable type is null
 
-            PropertyInfo value = pInfo.FieldType.GetProperty("Value");
+            PropertyInfo value = pInfo != null ? pInfo.FieldType.GetProperty("Value")
+                : pInfoValue.GetType().GetProperty("Value");
             return value.GetValue(pInfoValue, null);
         }
 
@@ -684,7 +691,7 @@ namespace System.Data.DBAccess.Generic
 
             var f = data.ModelFields[propertyName];
 
-            if (f == null && data.ModelPropertiesAccessors != null && data.ModelPropertiesAccessors[propertyName].HasGetter)
+            if (f == null && data.ModelPropertiesAccessors != null)// && data.ModelPropertiesAccessors[propertyName].HasGetter)
                 return data.ModelProperties[propertyName].PropertyType;
 
             return f.FieldType;
@@ -726,7 +733,7 @@ namespace System.Data.DBAccess.Generic
             {
                 Type thisType = nest.Value.FieldType;
                 ModelData thisData = db.ModelsData[thisType];
-                Object m = Activator.CreateInstance(thisType);
+                Object m = data.NestedTypesInstantiatedInConstructor[thisType] ? model.GetValue(nest.Key) : Activator.CreateInstance(thisType);
                 var nestedDefaultValuesToPopulate = allNestedDefaultValuesToPopulate[thisType];
                 db.PopulateDefaultModelValues(m, nestedDefaultValuesToPopulate, thisType, colNames, thisData, allNestedDefaultValuesToPopulate);
                 fda.Set(model, nest.Key, m);

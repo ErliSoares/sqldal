@@ -234,7 +234,7 @@ namespace System.Data.DBAccess.Generic.Providers.CSV
         /// <returns>An ExecuteReadQuickTuple of the parsed CSV file.</returns>
         public ExecuteReadQuickTuple ReadCSV(String file, Char delimiter, Boolean hasHeaderRow)
         {
-            return this.ReadCSV(file, delimiter, hasHeaderRow, null);
+            return this.ReadCSV(file, delimiter, hasHeaderRow, this.TableName);
         }
 
         private int m_colCount;
@@ -250,6 +250,8 @@ namespace System.Data.DBAccess.Generic.Providers.CSV
         {
             var tuple = new ExecuteReadQuickTuple();
             tuple.DataRows = new List<Object[]>();
+            if (!String.IsNullOrWhiteSpace(tableName))
+                tuple.TableName = tableName;
 
             using (var sr = new StreamReader(file, this.Encoding))
             {

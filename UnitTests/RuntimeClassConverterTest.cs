@@ -84,7 +84,7 @@ namespace UnitTests
         #endregion
 
 
-        private static String ConnectionString { get { return ""; } }
+        private static String ConnectionString { get { return "server=localhost;initial catalog=SqlDALUnitTests;integrated security=true"; } }
         private static SqlDBAccess NewDB { get { return new SqlDBAccess(ConnectionString); } }
         private const String BasicRead = "SELECT * FROM ReadType1 WITH (NOLOCK)";
         private const String BasicReadNoRows = "SELECT * FROM ReadType1 WITH (NOLOCK) WHERE ID > 5";

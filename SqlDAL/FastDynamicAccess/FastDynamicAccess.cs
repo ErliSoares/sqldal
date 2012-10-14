@@ -306,7 +306,7 @@ namespace System.Data.DBAccess.Generic
             {
                 if (!s_ModelPopulateCache.TryGetValue(methodName, out gmpmd))
                 {
-                    int numOfModels = 1;
+                    ushort numOfModels = 1;
 
                     //if it's not generic we need to be working with an object list
                     var listType = typeof(List<>).MakeGenericType(new Type[] { isGeneric ? modelType : typeof(Object) });
@@ -351,7 +351,7 @@ namespace System.Data.DBAccess.Generic
                     foreach (var nest in data.NestedModelBaseFields)
                     {
                         var thisType = nest.Value.FieldType;
-                        FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref numOfModels, modelsData, nest.Key, modelType, !data.NestedTypesInstantiatedInConstructor[thisType]);
+                        FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref numOfModels, modelsData, nest.Key, modelType, !data.NestedTypesInstantiatedInConstructor[thisType], 2);
                     }
 
                     //add it to the list
@@ -407,7 +407,7 @@ namespace System.Data.DBAccess.Generic
         /// </summary>
         /// <param name="il">The IL generator.</param>
         /// <param name="i">The index.</param>
-        private static void Stloc_i(ILGenerator il, int i)
+        private static void Stloc_i(ILGenerator il, ushort i)
         {
             switch (i + 2)
             {
@@ -421,13 +421,13 @@ namespace System.Data.DBAccess.Generic
                     il.Emit(OpCodes.Stloc_3);
                     break;
                 default:
-                    if (i + 2 <= 127)
+                    if (i + 2 <= sbyte.MaxValue)
                     {
-                        il.Emit(OpCodes.Stloc_S, i + 2);
+                        il.Emit(OpCodes.Stloc_S, (sbyte)(i + 2));
                     }
                     else
                     {
-                        il.Emit(OpCodes.Stloc, i + 2);
+                        il.Emit(OpCodes.Stloc, (ushort)(i + 2));
                     }
                     break;
             }
@@ -438,7 +438,7 @@ namespace System.Data.DBAccess.Generic
         /// </summary>
         /// <param name="il">The IL generator.</param>
         /// <param name="i">The index.</param>
-        private static void Ldloc_i(ILGenerator il, int i)
+        private static void Ldloc_i(ILGenerator il, ushort i)
         {
             switch (i + 2)
             {
@@ -452,25 +452,25 @@ namespace System.Data.DBAccess.Generic
                     il.Emit(OpCodes.Ldloc_3);
                     break;
                 default:
-                    if (i + 2 <= 127)
+                    if (i + 2 <= sbyte.MaxValue)
                     {
-                        il.Emit(OpCodes.Ldloc_S, i + 2);
+                        il.Emit(OpCodes.Ldloc_S, (sbyte)(i + 2));
                     }
                     else
                     {
-                        il.Emit(OpCodes.Ldloc, i + 2);
+                        il.Emit(OpCodes.Ldloc, (ushort)(i + 2));
                     }
                     break;
             }
         }
 
-        private static void LoadArrayElement(ILGenerator il, int i)
+        private static void LoadArrayElement(ILGenerator il, ushort i)
         {
             //load the array index we want to read from the Object[] dr
             if (i <= 8)
                 il.Emit(GetLDC_I4_Code(i));
-            else if (i <= 127)
-                il.Emit(OpCodes.Ldc_I4_S, i);
+            else if (i <= sbyte.MaxValue)
+                il.Emit(OpCodes.Ldc_I4_S, (sbyte)i);
             else
                 il.Emit(OpCodes.Ldc_I4, i);
 
@@ -489,17 +489,19 @@ namespace System.Data.DBAccess.Generic
         /// <param name="parentProperty">The parent property name into which this model will be set.</param>
         /// <param name="parentType">The parent class type.</param>
         /// <param name="instantiateNest">True/False if this child needs to be instantiated in the parent before use or not.</param>
-        private static void GenerateChildIL(ILGenerator il, Type modelType, PopulateData data, Dictionary<Type, PopulateData> allNestedPData, ref int thisModelNum, Dictionary<Type, ModelData> modelsData, String parentProperty, Type parentType, Boolean instantiateNest)
+        private static void GenerateChildIL(ILGenerator il, Type modelType, PopulateData data, Dictionary<Type, PopulateData> allNestedPData, ref ushort thisModelNum, Dictionary<Type, ModelData> modelsData, String parentProperty, Type parentType, Boolean instantiateNest, ushort parentModelNum)
         {
             //emit il for this model
             FastDynamicAccess.EmitIL(il, modelType, data.MappedCols, data.PropertyFormats, data.PropertyTypes, thisModelNum++, instantiateNest, parentType, parentProperty);
+
+            ushort thisParentNum = thisModelNum;
 
             //set the property of the parent where this child goes into
             //This actually assigns the child into the parent before any possible children of this child are dealt with.
             //This is backwards compared to how I would have written this in actual C#, but it simplifies the MSIL
 
             //load the parent model to the top of the stack
-            FastDynamicAccess.Ldloc_i(il, thisModelNum - 1);
+            FastDynamicAccess.Ldloc_i(il, parentModelNum);
             il.Emit(OpCodes.Castclass, parentType);
 
             //load THIS model to the top of the stack
@@ -512,7 +514,7 @@ namespace System.Data.DBAccess.Generic
             foreach (var nest in modelsData[modelType].NestedModelBaseFields)
             {
                 var thisType = nest.Value.FieldType;
-                FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref thisModelNum, modelsData, nest.Key, modelType, !modelsData[modelType].NestedTypesInstantiatedInConstructor[thisType]);
+                FastDynamicAccess.GenerateChildIL(il, thisType, allNestedPData[thisType], allNestedPData, ref thisModelNum, modelsData, nest.Key, modelType, !modelsData[modelType].NestedTypesInstantiatedInConstructor[thisType], thisParentNum);
             }
         }
 
@@ -520,7 +522,7 @@ namespace System.Data.DBAccess.Generic
         /// Emits IL to populate a class.
         /// </summary>
         /// <param name="il">The IL generator.</param>
-        /// <param name="modelType">The type of class being popoulated.</param>
+        /// <param name="modelType">The type of class being populated.</param>
         /// <param name="propertyNames">The mapped property/column names.  Properties which do not map should be null.</param>
         /// <param name="stringFormats">The string formats to apply to the properties.</param>
         /// <param name="propertyTypes">The type of each property.</param>
@@ -528,7 +530,7 @@ namespace System.Data.DBAccess.Generic
         /// <param name="instantiateNest">True/False if this child needs to be instantiated in the parent before use or not.</param>
         /// <param name="parentType">The parnet class type.  Only used if instantiateNest is true.</param>
         /// <param name="parentProperty">The parent property name into which this class will be set.  Only used if instantiateNest is true.</param>
-        private static void EmitIL(ILGenerator il, Type modelType, List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, int thisModelNum, Boolean instantiateNest, Type parentType, String parentProperty)
+        private static void EmitIL(ILGenerator il, Type modelType, List<String> propertyNames, List<String> stringFormats, List<Type> propertyTypes, ushort thisModelNum, Boolean instantiateNest, Type parentType, String parentProperty)
         {
             var sfMeth = typeof(String).GetMethod("Format", new Type[] { typeof(String), typeof(Object) });
 
@@ -546,7 +548,7 @@ namespace System.Data.DBAccess.Generic
 
             il.Emit(OpCodes.Castclass, modelType); //cast it to the model type since it's an object
 
-            FastDynamicAccess.Stloc_i(il, thisModelNum + 1);
+            FastDynamicAccess.Stloc_i(il, (ushort)(thisModelNum + 1));
 
             /*
              * for (int i = 0; i < dr.Length; i++)
@@ -565,7 +567,7 @@ namespace System.Data.DBAccess.Generic
              * }
              */
 
-            for (int i = 0; i < propertyNames.Count; i++)
+            for (ushort i = 0; i < propertyNames.Count; i++)
             {
                 //no mapping from datarow to model, ignore it
                 if (propertyNames[i] == null)
@@ -575,8 +577,10 @@ namespace System.Data.DBAccess.Generic
                 if (setMethod == null)
                     continue;
 
+                var f = modelType.GetField(String.Format("<{0}>k__BackingField", propertyNames[i]), BindingFlags.NonPublic | BindingFlags.Instance);
+
                 il.BeginExceptionBlock();
-                FastDynamicAccess.Ldloc_i(il, thisModelNum + 1);
+                FastDynamicAccess.Ldloc_i(il, (ushort)(thisModelNum + 1));
 
                 if (stringFormats[i] != null)
                 {
@@ -639,7 +643,11 @@ namespace System.Data.DBAccess.Generic
                     }
                 }
 
-                il.Emit(OpCodes.Callvirt, setMethod); //set the property
+                if (f != null)
+                    il.Emit(OpCodes.Stfld, f); //set the field if it's a backing field (auto-implemented property)
+                else
+                    il.Emit(OpCodes.Call, setMethod); //set the property, the compiler will normally emit Callvirt for this, 
+                                                      //but since i've created the object and I know it's not null, I can emit call
 
                 il.BeginCatchBlock(typeof(InvalidCastException));
                 il.Emit(OpCodes.Pop); //exception is first on the stack
